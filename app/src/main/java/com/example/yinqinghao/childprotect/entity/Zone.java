@@ -14,17 +14,19 @@ import java.util.Date;
 public class Zone implements Parcelable{
     private Date createDate;
     private String name;
-    private LatLng latLng;
+    private double lat;
+    private double lng;
     private long radius;
     private String status;
 
     public Zone() {
     }
 
-    public Zone(Date createDate, String name, LatLng latLng, long radius, String status) {
+    public Zone(Date createDate, String name, double lat, double lng, long radius, String status) {
         this.createDate = createDate;
         this.name = name;
-        this.latLng = latLng;
+        this.lat = lat;
+        this.lng = lng;
         this.radius = radius;
         this.status = status;
     }
@@ -32,7 +34,8 @@ public class Zone implements Parcelable{
     public Zone(Parcel in) {
         createDate = new Date(in.readLong());
         name = in.readString();
-        latLng = in.readParcelable(LatLng.class.getClassLoader());
+        lat = in.readDouble();
+        lng = in.readDouble();
         radius = in.readLong();
         status = in.readString();
     }
@@ -53,7 +56,8 @@ public class Zone implements Parcelable{
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeLong(createDate.getTime());
         dest.writeString(name);
-        dest.writeParcelable(latLng,flags);
+        dest.writeDouble(lat);
+        dest.writeDouble(lng);
         dest.writeLong(radius);
         dest.writeString(status);
     }
@@ -74,12 +78,20 @@ public class Zone implements Parcelable{
         this.name = name;
     }
 
-    public LatLng getLatLng() {
-        return latLng;
+    public double getLat() {
+        return lat;
     }
 
-    public void setLatLng(LatLng latLng) {
-        this.latLng = latLng;
+    public void setLat(double lat) {
+        this.lat = lat;
+    }
+
+    public double getLng() {
+        return lng;
+    }
+
+    public void setLng(double lng) {
+        this.lng = lng;
     }
 
     public long getRadius() {

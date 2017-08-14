@@ -31,9 +31,9 @@ public class GetLocationTask extends AsyncTask<String, Void, Location> {
     //location listerer
     private static MyLocationListener myLocationListener;
 
-    public GetLocationTask(GetLocationTask.LocationResponse delegate, Context context, Activity activity) {
+    public GetLocationTask(GetLocationTask.LocationResponse delegate, Activity activity) {
         this.delegate = delegate;
-        this.context = context;
+        this.context = activity;
         this.activity = activity;
         myLocationListener = new MyLocationListener();
     }

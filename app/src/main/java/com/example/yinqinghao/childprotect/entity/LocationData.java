@@ -8,22 +8,20 @@ import java.util.Date;
  * Created by yinqinghao on 12/8/17.
  */
 
-public class Notification {
+public class LocationData {
     private Date datetime;
-    private String childId;
     private double lat;
     private double lng;
-    private String msg;
+    private int batteryStatus;
 
-    public Notification() {
+    public LocationData() {
     }
 
-    public Notification(Date datetime, String childId, double lat, double lng, String msg) {
+    public LocationData(Date datetime, double lat, double lng, int batteryStatus) {
         this.datetime = datetime;
-        this.childId = childId;
         this.lat = lat;
         this.lng = lng;
-        this.msg = msg;
+        this.batteryStatus = batteryStatus;
     }
 
     public Date getDatetime() {
@@ -34,13 +32,6 @@ public class Notification {
         this.datetime = datetime;
     }
 
-    public String getChildId() {
-        return childId;
-    }
-
-    public void setChildId(String childId) {
-        this.childId = childId;
-    }
 
     public double getLat() {
         return lat;
@@ -58,11 +49,11 @@ public class Notification {
         this.lng = lng;
     }
 
-    public String getMsg() {
-        return msg;
+    public int getBatteryStatus() {
+        return batteryStatus;
     }
 
-    public void setMsg(String msg) {
-        this.msg = msg;
+    public void setBatteryStatus(int batteryStatus) {
+        this.batteryStatus = batteryStatus;
     }
 }

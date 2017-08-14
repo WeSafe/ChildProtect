@@ -1,20 +1,12 @@
 package com.example.yinqinghao.childprotect;
 
-import android.*;
-import android.annotation.TargetApi;
 import android.app.Fragment;
 import android.app.FragmentManager;
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.location.Location;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
-import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
@@ -28,9 +20,20 @@ import android.view.MenuItem;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.maps.MapFragment;
+import com.example.yinqinghao.childprotect.entity.LocationData;
+import com.example.yinqinghao.childprotect.fragment.MapsFragment;
+import com.google.android.gms.maps.model.LatLng;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener{
@@ -77,7 +80,7 @@ public class MainActivity extends AppCompatActivity
                     // User is signed in
                     Log.d(TAG, "onAuthStateChanged:signed_in:" + user.getUid());
                     if (mMapFragment == null)
-                        mMapFragment = new com.example.yinqinghao.childprotect.fragment.MapFragment();
+                        mMapFragment = new MapsFragment();
                     Fragment home = mMapFragment;
                     FragmentManager fragmentManager = getFragmentManager();
                     fragmentManager.beginTransaction().replace(R.id.content_frame, home).commit();
@@ -101,9 +104,45 @@ public class MainActivity extends AppCompatActivity
         usernameTextView = (TextView) navigationView.getHeaderView(0).findViewById(R.id.txtUserName);
         emailTextView = (TextView) navigationView.getHeaderView(0).findViewById(R.id.txtUserEmail);
         mAuth = FirebaseAuth.getInstance();
-
-
+//        data();
     }
+
+//    private void data() {
+//        FirebaseDatabase db = FirebaseDatabase.getInstance();
+//        Date now = new Date();
+//        SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy");
+//        String date = format.format(now);
+//        Date temp = null;
+//        try {
+//            temp = format.parse(date);
+//        } catch (Exception ex) {
+//
+//        }
+//        long a = temp.getTime();
+//        LatLng monash = new LatLng(-37.876823,145.045837);
+//        LocationData l = new LocationData(now,monash,100);
+//        db.getReference("location/DK8Nl733lYNRd1MWftTfTI8SwPD2/"+ a).setValue(l);
+//        LocationData c = l;
+//        c.setBatteryStatus(99);
+//        db.getReference("location/DK8Nl733lYNRd1MWftTfTI8SwPD2/"+ (a +1)).setValue(c);
+//        db.getReference("location/DK8Nl733lYNRd1MWftTfTI8SwPD2/"+ (a - 1)).setValue(l);
+//        db.getReference("location/DK8Nl733lYNRd1MWftTfTI8SwPD2").orderByKey().limitToLast(1).addListenerForSingleValueEvent(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(DataSnapshot dataSnapshot) {
+//                if (dataSnapshot.exists()){
+//                    Map<String,String> a = (HashMap<String,String>)dataSnapshot.getValue();
+////                    LocationData locationData = dataSnapshot.getValue(LocationData.class);
+////                    Log.d("MainActivity",dataSnapshot.toString());
+//                    Toast.makeText(MainActivity.this, dataSnapshot.toString(), Toast.LENGTH_LONG).show();
+//                }
+//            }
+//
+//            @Override
+//            public void onCancelled(DatabaseError databaseError) {
+//
+//            }
+//        });
+//    }
 
 
     @Override
@@ -164,7 +203,7 @@ public class MainActivity extends AppCompatActivity
         switch (id) {
             case R.id.nav_map:
                 if (mMapFragment == null) {
-                    mMapFragment = new com.example.yinqinghao.childprotect.fragment.MapFragment();
+                    mMapFragment = new MapsFragment();
                 }
                 nextFragment = mMapFragment;
                 break;
@@ -195,7 +234,7 @@ public class MainActivity extends AppCompatActivity
         if (requestCode == 1) {
             if (resultCode == RESULT_OK) {
                 if (mMapFragment == null)
-                    mMapFragment = new com.example.yinqinghao.childprotect.fragment.MapFragment();
+                    mMapFragment = new MapsFragment();
                 Fragment home = mMapFragment;
                 FragmentManager fragmentManager = getFragmentManager();
                 fragmentManager.beginTransaction().replace(R.id.content_frame, home).commit();
