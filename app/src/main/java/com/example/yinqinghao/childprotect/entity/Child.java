@@ -3,8 +3,10 @@ package com.example.yinqinghao.childprotect.entity;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
@@ -15,14 +17,14 @@ import java.util.SortedSet;
 
 public class Child extends User {
     private String status;
-    private Map<String,LocationData> locationDatas;
+    private Map<String,List<LocationData>> locationDatas;
 
     public Child(String uid, String email, String firstName, String lastName, long phoneNumber, boolean isOnline, String status) {
         super(uid, email, firstName, lastName, phoneNumber, isOnline);
         this.status = status;
     }
 
-    public Child(String uid, String email, String firstName, String lastName, long phoneNumber, boolean isOnline, String status, Map<String,LocationData> locationDatas) {
+    public Child(String uid, String email, String firstName, String lastName, long phoneNumber, boolean isOnline, String status, Map<String,List<LocationData>> locationDatas) {
         super(uid, email, firstName, lastName, phoneNumber, isOnline);
         this.status = status;
         this.locationDatas = locationDatas;
@@ -63,23 +65,62 @@ public class Child extends User {
         this.status = status;
     }
 
-    public Map<String,LocationData> getLocationDatas() {
+    public Map<String,List<LocationData>> getLocationDatas() {
         return locationDatas;
     }
 
     public LocationData getMostRecentLocation() {
-        Long maxKey = null;
-        Long temp = null;
-        for (String k: locationDatas.keySet()) {
-            if (maxKey == null)
-                maxKey = Long.parseLong(k);
-            temp = Long.parseLong(k);
-            maxKey = Math.max(temp,maxKey);
+//        Long maxKey = null;
+//        Long temp = null;
+//        for (String k: locationDatas.keySet()) {
+//            if (maxKey == null)
+//                maxKey = Long.parseLong(k);
+//            temp = Long.parseLong(k);
+//            maxKey = Math.max(temp,maxKey);
+//        }
+        long today = getDatetime();
+        String key = today + "";
+        if (locationDatas.containsKey(today+"")) {
+            List<LocationData> locations = locationDatas.get(key);
+            sortLocations(locations);
+            return locations.get(0);
         }
-        return locationDatas.get(maxKey.toString());
+        return null;
+
     }
 
-    public void setLocationDatas(Map<String,LocationData> locationDatas) {
+    public static void sortLocations(List<LocationData> locations) {
+        Collections.sort(locations, new Comparator<LocationData>() {
+            @Override
+            public int compare(LocationData o1, LocationData o2) {
+                return o1.getDatetime().after(o2.getDatetime()) ? -1 : 1;
+            }
+        });
+    }
+
+    public static void sortLocationsAESC(List<LocationData> locations) {
+        Collections.sort(locations, new Comparator<LocationData>() {
+            @Override
+            public int compare(LocationData o1, LocationData o2) {
+                return o1.getDatetime().after(o2.getDatetime()) ? 1 : -1;
+            }
+        });
+    }
+
+    public static long getDatetime() {
+        Date now = new Date();
+        SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy");
+        String date = format.format(now);
+        Date temp = null;
+        try {
+            temp = format.parse(date);
+        } catch (Exception ex) {
+
+        }
+        return temp.getTime();
+    }
+
+    public void setLocationDatas(Map<String,List<LocationData>> locationDatas) {
         this.locationDatas = locationDatas;
     }
 
