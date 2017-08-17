@@ -9,7 +9,9 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedSet;
+import java.util.TreeMap;
 
 /**
  * Created by yinqinghao on 12/8/17.
@@ -17,14 +19,18 @@ import java.util.SortedSet;
 
 public class Child extends User {
     private String status;
-    private Map<String,List<LocationData>> locationDatas;
+    private Map<String,Map<String, LocationData>> locationDatas;
+//    private boolean isStop;
 
-    public Child(String uid, String email, String firstName, String lastName, long phoneNumber, boolean isOnline, String status) {
-        super(uid, email, firstName, lastName, phoneNumber, isOnline);
-        this.status = status;
-    }
+//    public Child(String uid, String email, String firstName, String lastName, long phoneNumber, boolean isOnline, String status, Map<String, List<LocationData>> locationDatas, boolean isStop) {
+//        super(uid, email, firstName, lastName, phoneNumber, isOnline);
+//        this.status = status;
+//        this.locationDatas = locationDatas;
+//        this.isStop = isStop;
+//    }
 
-    public Child(String uid, String email, String firstName, String lastName, long phoneNumber, boolean isOnline, String status, Map<String,List<LocationData>> locationDatas) {
+
+    public Child(String uid, String email, String firstName, String lastName, long phoneNumber, boolean isOnline, String status, Map<String, Map<String, LocationData>> locationDatas) {
         super(uid, email, firstName, lastName, phoneNumber, isOnline);
         this.status = status;
         this.locationDatas = locationDatas;
@@ -65,46 +71,74 @@ public class Child extends User {
         this.status = status;
     }
 
-    public Map<String,List<LocationData>> getLocationDatas() {
-        return locationDatas;
-    }
+//    public boolean isStop() {
+//        return isStop;
+//    }
+//
+//    public void setStop(boolean stop) {
+//        isStop = stop;
+//    }
+
+//    public LocationData getMostRecentLocation() {
+//        long today = getDatetime();
+//        String key = today + "";
+//        if (locationDatas.containsKey(today+"")) {
+//            List<LocationData> locations = locationDatas.get(key);
+//            sortLocations(locations);
+//            return locations.get(0);
+//        }
+//        return null;
+//
+//    }
 
     public LocationData getMostRecentLocation() {
-//        Long maxKey = null;
-//        Long temp = null;
-//        for (String k: locationDatas.keySet()) {
-//            if (maxKey == null)
-//                maxKey = Long.parseLong(k);
-//            temp = Long.parseLong(k);
-//            maxKey = Math.max(temp,maxKey);
-//        }
         long today = getDatetime();
         String key = today + "";
         if (locationDatas.containsKey(today+"")) {
-            List<LocationData> locations = locationDatas.get(key);
-            sortLocations(locations);
-            return locations.get(0);
+            Map<String,LocationData> locations = locationDatas.get(key);
+            String keyRecet = sortLocations(locations.keySet());
+            return locations.get(keyRecet);
         }
         return null;
-
     }
 
-    public static void sortLocations(List<LocationData> locations) {
-        Collections.sort(locations, new Comparator<LocationData>() {
-            @Override
-            public int compare(LocationData o1, LocationData o2) {
-                return o1.getDatetime().after(o2.getDatetime()) ? -1 : 1;
-            }
-        });
+//    public static void sortLocations(List<LocationData> locations) {
+//        Collections.sort(locations, new Comparator<LocationData>() {
+//            @Override
+//            public int compare(LocationData o1, LocationData o2) {
+//                return o1.getDatetime().after(o2.getDatetime()) ? -1 : 1;
+//            }
+//        });
+//    }
+
+    public static String sortLocations(Set<String> keys) {
+        long max = 0;
+        for (String key : keys) {
+            long keyL = Long.parseLong(key);
+            max = Math.max(max, keyL);
+        }
+        return max+"";
     }
 
-    public static void sortLocationsAESC(List<LocationData> locations) {
-        Collections.sort(locations, new Comparator<LocationData>() {
-            @Override
-            public int compare(LocationData o1, LocationData o2) {
-                return o1.getDatetime().after(o2.getDatetime()) ? 1 : -1;
-            }
-        });
+    public static TreeMap<String, LocationData> sortLocationsAESC(Map<String,LocationData> locations) {
+//        Collections.sort(locations, new Comparator<LocationData>() {
+//            @Override
+//            public int compare(LocationData o1, LocationData o2) {
+//                return o1.getDatetime().after(o2.getDatetime()) ? 1 : -1;
+//            }
+//        });
+
+//        long min = Long.MAX_VALUE;
+//        for (String key : keys) {
+//            long keyL = Long.parseLong(key);
+//            min = Math.min(min, keyL);
+//        }
+//        return min+"";
+
+        MyComparator comp = new MyComparator(locations);
+        TreeMap<String, LocationData> res = new TreeMap(comp);
+        res.putAll(locations);
+        return res;
     }
 
     public static long getDatetime() {
@@ -120,12 +154,28 @@ public class Child extends User {
         return temp.getTime();
     }
 
-    public void setLocationDatas(Map<String,List<LocationData>> locationDatas) {
+    public Map<String, Map<String, LocationData>> getLocationDatas() {
+        return locationDatas;
+    }
+
+    public void setLocationDatas(Map<String, Map<String, LocationData>> locationDatas) {
         this.locationDatas = locationDatas;
     }
 
     @Override
     public int describeContents() {
         return 0;
+    }
+
+    static class MyComparator implements Comparator {
+        Map map;
+        public MyComparator(Map map) {
+            this.map = map;
+        }
+
+        public int compare(Object o1, Object o2) {
+            return ((LocationData)map.get(o1)).getDatetime()
+                    .after(((LocationData)map.get(o2)).getDatetime()) ? 1 : -1;
+        }
     }
 }

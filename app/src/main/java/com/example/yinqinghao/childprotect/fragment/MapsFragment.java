@@ -55,6 +55,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
+import java.util.TreeMap;
 import java.util.concurrent.CountDownLatch;
 
 public class MapsFragment extends android.app.Fragment implements OnMapReadyCallback,
@@ -125,7 +127,7 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
         Button btnOK = (Button) d.findViewById(R.id.btn_ok);
         Button btnCancel = (Button) d.findViewById(R.id.btn_cancel);
         final WheelPicker wheelPicker = (WheelPicker) d.findViewById(R.id.main_wheel_center);
-        final Map<String,List<LocationData>> locationMap = child.getLocationDatas();
+        final Map<String,Map<String, LocationData>> locationMap = child.getLocationDatas();
         final List<String> data = new ArrayList<>();
         String sDate = "";
         final SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy");
@@ -161,12 +163,14 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
         d.show();
     }
 
-    private void drawRoute(List<LocationData> locationDatas) {
-        Child.sortLocationsAESC(locationDatas);
+    private void drawRoute(Map<String, LocationData> locationDatas) {
+        removeLocationListener();
+        TreeMap<String, LocationData> dataTreeMap = Child.sortLocationsAESC(locationDatas);
         Handler routeHandler = new Handler();
         final PolylineOptions routeOption = new PolylineOptions();
-        long delay = 1000;
-        for (final LocationData l: locationDatas) {
+        long delay = 800;
+        for (final Object o: dataTreeMap.values().toArray()) {
+            final LocationData l = (LocationData) o;
             routeHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
@@ -177,7 +181,7 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
                     mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(camera,13));
                 }
             },delay);
-            delay += 1000;
+            delay += 800;
         }
     }
 
@@ -240,12 +244,12 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
                     if (locationData == null) return;
                     String childId = locationData.getUid();
                     Child child = mChildren.get(childId);
-                    Map<String, List<LocationData>> childLocations = child.getLocationDatas();
+                    Map<String,Map<String, LocationData>> childLocations = child.getLocationDatas();
                     if (childLocations.containsKey(mTodayTime+"")) {
-                        childLocations.get(mTodayTime+"").add(locationData);
+                        childLocations.get(mTodayTime+"").put(locationData.getDatetime().getTime()+"",locationData);
                     } else {
-                        List<LocationData> locationDatas = new ArrayList<>();
-                        locationDatas.add(locationData);
+                        Map<String, LocationData> locationDatas = new HashMap<>();
+                        locationDatas.put(locationData.getDatetime().getTime()+"",locationData);
                         childLocations.put(mTodayTime + "", locationDatas);
                     }
 
@@ -326,6 +330,18 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
         String parentId = mAuth.getCurrentUser().getUid();
         DatabaseReference refFID = mDb.getReference("user").child(parentId).child("familyId");
         refFID.addListenerForSingleValueEvent(mFidValueListener);
+    }
+
+    private void removeLocationListener() {
+        DatabaseReference refChildren = mDb.getReference("family").child(mFamilyId)
+                .child("child");
+        for (Child child: mChildren.values()) {
+            com.google.firebase.database.Query queryLocation = refChildren.child(child.getUid())
+                    .child("locationDatas").child(mTodayTime+"").orderByKey()
+                    .limitToLast(1);
+            queryLocation.removeEventListener(mLocationDataValueListner);
+        }
+
     }
 
     private void addChildMarker(Child c) {
