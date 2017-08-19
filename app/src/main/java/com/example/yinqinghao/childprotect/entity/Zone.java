@@ -3,8 +3,6 @@ package com.example.yinqinghao.childprotect.entity;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import com.google.android.gms.maps.model.LatLng;
-
 import java.util.Date;
 
 /**
@@ -13,31 +11,34 @@ import java.util.Date;
 
 public class Zone implements Parcelable{
     private Date createDate;
-    private String name;
+    private String des;
     private double lat;
     private double lng;
     private long radius;
     private String status;
+    private String id;
 
     public Zone() {
     }
 
-    public Zone(Date createDate, String name, double lat, double lng, long radius, String status) {
+    public Zone(Date createDate, String des, double lat, double lng, long radius, String status, String id) {
         this.createDate = createDate;
-        this.name = name;
+        this.des = des;
         this.lat = lat;
         this.lng = lng;
         this.radius = radius;
         this.status = status;
+        this.id = id;
     }
 
     public Zone(Parcel in) {
         createDate = new Date(in.readLong());
-        name = in.readString();
+        des = in.readString();
         lat = in.readDouble();
         lng = in.readDouble();
         radius = in.readLong();
         status = in.readString();
+        id = in.readString();
     }
 
     public static final Parcelable.Creator<Zone> CREATOR = new Parcelable.Creator<Zone>() {
@@ -55,11 +56,12 @@ public class Zone implements Parcelable{
 
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeLong(createDate.getTime());
-        dest.writeString(name);
+        dest.writeString(des);
         dest.writeDouble(lat);
         dest.writeDouble(lng);
         dest.writeLong(radius);
         dest.writeString(status);
+        dest.writeString(id);
     }
 
     public Date getCreateDate() {
@@ -70,12 +72,12 @@ public class Zone implements Parcelable{
         this.createDate = createDate;
     }
 
-    public String getName() {
-        return name;
+    public String getDes() {
+        return des;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setDes(String des) {
+        this.des = des;
     }
 
     public double getLat() {
@@ -108,6 +110,14 @@ public class Zone implements Parcelable{
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     @Override

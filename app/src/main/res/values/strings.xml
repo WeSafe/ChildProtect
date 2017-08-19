@@ -25,4 +25,6 @@
         completions."
     </string>
     <string name="title_activity_maps">Map</string>
+    <string name="title_zone_list">Zones</string>
+    <string name="title_zone_detail">Zone Detail</string>
 </resources>

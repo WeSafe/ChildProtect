@@ -106,6 +106,7 @@ public class GetLocationTask extends AsyncTask<String, Void, Location> {
     protected void onPostExecute(Location location) {
         locationManager.removeUpdates(myLocationListener);
         delegate.locationProcessFinish(location);
+        latitude = 0;
     }
 
     /**

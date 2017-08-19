@@ -3,6 +3,8 @@ package com.example.yinqinghao.childprotect.fragment;
 import android.annotation.TargetApi;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.net.Uri;
@@ -22,9 +24,11 @@ import android.widget.Toast;
 
 import com.aigestudio.wheelpicker.WheelPicker;
 import com.example.yinqinghao.childprotect.GetLocationTask;
+import com.example.yinqinghao.childprotect.MainActivity;
 import com.example.yinqinghao.childprotect.R;
 import com.example.yinqinghao.childprotect.entity.Child;
 import com.example.yinqinghao.childprotect.entity.LocationData;
+import com.example.yinqinghao.childprotect.entity.Zone;
 import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
 import com.google.android.gms.drive.query.Query;
@@ -34,6 +38,9 @@ import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.MapsInitializer;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.Circle;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -65,6 +72,7 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
     private GoogleMap mMap;
 
     private static final int MY_PERMISSIONS_REQUEST_FINE_LOCATION = 123;
+    private static final int ZONE_ACTIVITY = 876;
     private static final String TAG = "MapsFragment";
     private GetLocationTask locationTask;
     private Location mLocation;
@@ -79,12 +87,16 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
     private ValueEventListener mFidValueListener;
     private ValueEventListener mChildrenValueListener;
     private ValueEventListener mLocationDataValueListner;
+    private ValueEventListener mZoneDataListener;
 
     private Handler mUiHandler = new Handler();
 
     private String mFamilyId;
+    private Marker mMyMarker;
     private Map<String, Child> mChildren;
     private Map<String, Marker> mChildMarkers;
+    private List<Circle> mZones;
+    private List<Marker> mCenters;
     private long mTodayTime;
 
     public MapsFragment() {
@@ -114,9 +126,10 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
 
             mTodayTime = Child.getDatetime();
             mChildMarkers = new HashMap<>();
+            mZones = new ArrayList<>();
+            mCenters = new ArrayList<>();
             mFamilyId = "";
             initListener();
-            getChildLocation();
         }
     }
 
@@ -169,19 +182,28 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
         Handler routeHandler = new Handler();
         final PolylineOptions routeOption = new PolylineOptions();
         long delay = 800;
+        double lat = 0;
+        double lng = 0;
+        for (Marker marker : mChildMarkers.values()) {
+            marker.remove();
+        }
+        mMyMarker.remove();
         for (final Object o: dataTreeMap.values().toArray()) {
             final LocationData l = (LocationData) o;
-            routeHandler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    mMap.clear();
-                    LatLng camera = new LatLng(l.getLat(),l.getLng());
-                    routeOption.add(camera);
-                    Polyline polyline = mMap.addPolyline(routeOption);
-                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(camera,13));
-                }
-            },delay);
-            delay += 800;
+            if (lat != l.getLat() || lng != l.getLng()) {
+                routeHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        LatLng camera = new LatLng(l.getLat(), l.getLng());
+                        routeOption.add(camera);
+                        Polyline polyline = mMap.addPolyline(routeOption);
+                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(camera, 13));
+                    }
+                }, delay);
+                delay += 800;
+            }
+            lat = l.getLat();
+            lng = l.getLng();
         }
     }
 
@@ -297,7 +319,7 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
                         if (mChildren.get(childId).getMostRecentLocation() == null) return;
                         LocationData locationData = mChildren.get(childId).getMostRecentLocation();
                         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(
-                                new LatLng(locationData.getLat(), locationData.getLng()), 11));
+                                new LatLng(locationData.getLat(), locationData.getLng()), 12));
                     }
                 }
             }
@@ -308,14 +330,33 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
             }
         };
 
+        mZoneDataListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    for (DataSnapshot ds : dataSnapshot.getChildren()) {
+                        Zone zone = ds.getValue(Zone.class);
+                        drawCircle(zone);
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        };
+
         mFidValueListener = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
                     mFamilyId = dataSnapshot.getValue().toString();
+//                    saveFid();
                     DatabaseReference refChildren = mDb.getReference("family").child(mFamilyId)
                             .child("child");
                     refChildren.addListenerForSingleValueEvent(mChildrenValueListener);
+                    getZones();
                 }
             }
 
@@ -326,11 +367,52 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
         };
     }
 
+    private void drawCircle(Zone zone) {
+        long radius = zone.getRadius();
+        LatLng latLng = new LatLng(zone.getLat(),zone.getLng());
+        boolean isSafe = zone.getStatus().equals("safe");
+        int strokeColor = ContextCompat.getColor(getActivity() ,
+                isSafe ? R.color.safeStrokeColor : R.color.dangerStrokeColor);
+        int fillColor = ContextCompat.getColor(getActivity() ,
+                isSafe ? R.color.safeFillColor : R.color.dangerFillColor);
+        String des = zone.getDes();
+        String id = zone.getId();
+
+        Marker center = mMap.addMarker(new MarkerOptions()
+                .position(latLng)
+                .anchor(0.0f, 1.0f)
+                .title(des));
+
+        CircleOptions circleOptions = new CircleOptions()
+                .center(latLng)
+                .radius(radius)
+                .strokeColor(strokeColor)
+                .fillColor(fillColor)
+                .strokeWidth(3)
+                .clickable(true);
+        Circle circle = mMap.addCircle(circleOptions);
+        mCenters.add(center);
+        mZones.add(circle);
+    }
+
     private void getChildLocation() {
         String parentId = mAuth.getCurrentUser().getUid();
         DatabaseReference refFID = mDb.getReference("user").child(parentId).child("familyId");
         refFID.addListenerForSingleValueEvent(mFidValueListener);
     }
+
+    private void getZones() {
+        DatabaseReference refZone = mDb.getReference("zone")
+                .child(mFamilyId);
+        refZone.addListenerForSingleValueEvent(mZoneDataListener);
+    }
+
+//    private void saveFid() {
+//        SharedPreferences.Editor editor = getActivity().getSharedPreferences("ID", Context.MODE_PRIVATE).edit();
+//        editor.putString("familyId", mFamilyId);
+//        editor.putString("parentId", mAuth.getCurrentUser().getUid());
+//        editor.apply();
+//    }
 
     private void removeLocationListener() {
         DatabaseReference refChildren = mDb.getReference("family").child(mFamilyId)
@@ -341,7 +423,6 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
                     .limitToLast(1);
             queryLocation.removeEventListener(mLocationDataValueListner);
         }
-
     }
 
     private void addChildMarker(Child c) {
@@ -398,8 +479,10 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         mMap.getUiSettings().setMapToolbarEnabled(false);
+        getChildLocation();
         locationTask = new GetLocationTask(this, getActivity());
         checkPermission();
+
     }
 
     private void markMyLocation() {
@@ -411,11 +494,29 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
     public void locationProcessFinish(Location location) {
         locationTask = null;
         mLocation = location;
-        Marker me = mMap.addMarker(new MarkerOptions()
+        mMyMarker = mMap.addMarker(new MarkerOptions()
                 .position(new LatLng(mLocation.getLatitude(),mLocation.getLongitude())).title("My LocationData")
                 .anchor(0.0f, 1.0f));
         Location camera = mLocation;
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
-                new LatLng(camera.getLatitude(), camera.getLongitude()), 11));
+                new LatLng(camera.getLatitude(), camera.getLongitude()), 13));
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == ZONE_ACTIVITY) {
+            if (resultCode == getActivity().RESULT_OK) {
+                for (int i = 0; i < mCenters.size(); i++) {
+                    mZones.get(i).remove();
+                    mCenters.get(i).remove();
+                }
+                List<Zone> zones = data.getParcelableArrayListExtra("zones");
+                for (Zone zone: zones) {
+                    drawCircle(zone);
+                }
+            }
+            return;
+        }
+        super.onActivityResult(requestCode, resultCode, data);
     }
 }

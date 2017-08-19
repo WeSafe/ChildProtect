@@ -4,7 +4,9 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
@@ -46,6 +48,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import static android.Manifest.permission.READ_CONTACTS;
@@ -67,6 +70,9 @@ public class LoginActivity extends AppCompatActivity {
 
     private FirebaseAuth mAuth;
     private FirebaseDatabase mDb;
+
+    private ValueEventListener mFidListener;
+    private ValueEventListener mParentListener;
 
     private static final String TAG = "LoginActivity";
 
@@ -166,31 +172,54 @@ public class LoginActivity extends AppCompatActivity {
                     Log.d(TAG, "signInWithEmail:onComplete:" + task.isSuccessful());
                     FirebaseUser user = mAuth.getCurrentUser();
                     String uid = user.getUid();
-                    DatabaseReference refParent = mDb.getReference("family");
-                    refParent.child(uid).child("parent").child(uid).addListenerForSingleValueEvent(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(DataSnapshot dataSnapshot) {
-                            if (dataSnapshot.exists()) {
-                                //get parent info
-                                Parent parent = dataSnapshot.getValue(Parent.class);
-
-                                Intent returnIntent = getIntent();
-                                returnIntent.putExtra("email", parent.getEmail());
-                                returnIntent.putExtra("firstName", parent.getFirstName());
-                                returnIntent.putExtra("lastName", parent.getLastName());
-                                setResult(Activity.RESULT_OK, returnIntent);
-                                showProgress(false);
-                                finish();
-                            }
-                        }
-
-                        @Override
-                        public void onCancelled(DatabaseError databaseError) {}
-                    });
-
+                    initLinstener(uid);
+                    DatabaseReference refFid = mDb.getReference("user")
+                            .child(uid);
+                    refFid.addListenerForSingleValueEvent(mFidListener);
                 }
             }
         });
+    }
+
+    private void initLinstener(final String uid) {
+        mParentListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    //get parent info
+                    Parent parent = dataSnapshot.getValue(Parent.class);
+                    Intent returnIntent = getIntent();
+                    returnIntent.putExtra("email", parent.getEmail());
+                    returnIntent.putExtra("firstName", parent.getFirstName());
+                    returnIntent.putExtra("lastName", parent.getLastName());
+                    setResult(Activity.RESULT_OK, returnIntent);
+                    showProgress(false);
+                    finish();
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {}
+        };
+
+        mFidListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                String familyId = ((HashMap<String, String >)dataSnapshot.getValue()).get("familyId");
+                SharedPreferences sp = getSharedPreferences("ID", Context.MODE_PRIVATE);
+                SharedPreferences.Editor eLogin= sp.edit();
+                eLogin.putString("familyId", familyId);
+                eLogin.putString("parentId", mAuth.getCurrentUser().getUid());
+                eLogin.apply();
+                DatabaseReference refParent = mDb.getReference("family");
+                refParent.child(uid).child("parent").child(familyId).addListenerForSingleValueEvent(mParentListener);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        };
     }
 
 //    private void createNewUser(String email, String pwd, String name) {

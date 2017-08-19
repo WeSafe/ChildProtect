@@ -2,7 +2,9 @@ package com.example.yinqinghao.childprotect;
 
 import android.app.Fragment;
 import android.app.FragmentManager;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
@@ -37,6 +39,8 @@ import java.util.Map;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener{
+    private static final int ZONE_ACTIVITY = 876;
+
     private DrawerLayout drawer;
     private TextView usernameTextView;
     private TextView emailTextView;
@@ -45,8 +49,6 @@ public class MainActivity extends AppCompatActivity
     private Fragment mMapFragment;
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
-
-
 
     private static final String TAG = "MainActivity";
 
@@ -75,6 +77,10 @@ public class MainActivity extends AppCompatActivity
                     Fragment home = mMapFragment;
                     FragmentManager fragmentManager = getFragmentManager();
                     fragmentManager.beginTransaction().replace(R.id.content_frame, home).commit();
+                    SharedPreferences sp = getSharedPreferences("ID", Context.MODE_PRIVATE);
+                    String name = sp.getString("name",null);
+                    String email = sp.getString("email", null);
+                    setUserInfo(name,email);
                 } else {
                     // User is signed out
                     Log.d(TAG, "onAuthStateChanged:signed_out");
@@ -90,51 +96,12 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        accountNavItem = navigationView.getMenu().getItem(3);
+        accountNavItem = navigationView.getMenu().getItem(2);
         //find the login views
         usernameTextView = (TextView) navigationView.getHeaderView(0).findViewById(R.id.txtUserName);
         emailTextView = (TextView) navigationView.getHeaderView(0).findViewById(R.id.txtUserEmail);
         mAuth = FirebaseAuth.getInstance();
-//        data();
     }
-
-//    private void data() {
-//        FirebaseDatabase db = FirebaseDatabase.getInstance();
-//        Date now = new Date();
-//        SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy");
-//        String date = format.format(now);
-//        Date temp = null;
-//        try {
-//            temp = format.parse(date);
-//        } catch (Exception ex) {
-//
-//        }
-//        long a = temp.getTime();
-//        LatLng monash = new LatLng(-37.876823,145.045837);
-//        LocationData l = new LocationData(now,monash,100);
-//        db.getReference("location/DK8Nl733lYNRd1MWftTfTI8SwPD2/"+ a).setValue(l);
-//        LocationData c = l;
-//        c.setBatteryStatus(99);
-//        db.getReference("location/DK8Nl733lYNRd1MWftTfTI8SwPD2/"+ (a +1)).setValue(c);
-//        db.getReference("location/DK8Nl733lYNRd1MWftTfTI8SwPD2/"+ (a - 1)).setValue(l);
-//        db.getReference("location/DK8Nl733lYNRd1MWftTfTI8SwPD2").orderByKey().limitToLast(1).addListenerForSingleValueEvent(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(DataSnapshot dataSnapshot) {
-//                if (dataSnapshot.exists()){
-//                    Map<String,String> a = (HashMap<String,String>)dataSnapshot.getValue();
-////                    LocationData locationData = dataSnapshot.getValue(LocationData.class);
-////                    Log.d("MainActivity",dataSnapshot.toString());
-//                    Toast.makeText(MainActivity.this, dataSnapshot.toString(), Toast.LENGTH_LONG).show();
-//                }
-//            }
-//
-//            @Override
-//            public void onCancelled(DatabaseError databaseError) {
-//
-//            }
-//        });
-//    }
-
 
     @Override
     public void onStart() {
@@ -198,8 +165,13 @@ public class MainActivity extends AppCompatActivity
                 }
                 nextFragment = mMapFragment;
                 break;
+            case R.id.nav_zones:
+                Intent intent = new Intent(this, ZonesActivity.class);
+                startActivityForResult(intent, ZONE_ACTIVITY);
+                drawer.closeDrawer(GravityCompat.START);
+                return true;
             case R.id.nav_logout:
-                mAuth.signOut();
+                signOut();
                 return true;
             default:
                 break;
@@ -209,6 +181,15 @@ public class MainActivity extends AppCompatActivity
         drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    private void signOut() {
+        SharedPreferences sp = getSharedPreferences("ID", Context.MODE_PRIVATE);
+        SharedPreferences.Editor eLogin= sp.edit();
+        eLogin.clear();
+        eLogin.commit();
+        mAuth.signOut();
+        drawer.closeDrawer(GravityCompat.START);
     }
 
 
@@ -234,11 +215,22 @@ public class MainActivity extends AppCompatActivity
                 String email = data.getStringExtra("email");
                 String fname = data.getStringExtra("firstName");
                 String lname = data.getStringExtra("lastName");
+                SharedPreferences sp = getSharedPreferences("ID", Context.MODE_PRIVATE);
+                SharedPreferences.Editor eLogin= sp.edit();
                 name = fname + " " + lname;
+                eLogin.putString("name", name);
+                eLogin.putString("email", email);
+                eLogin.apply();
                 setUserInfo(email, name);
                 //display the welcome Toast
                 Toast.makeText(this,"Welcome " + name, Toast.LENGTH_SHORT).show();
             }
+        }
+
+        if (requestCode == ZONE_ACTIVITY
+                && resultCode == RESULT_OK
+                && mMapFragment != null) {
+            mMapFragment.onActivityResult(requestCode,resultCode,data);
         }
     }
 

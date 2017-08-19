@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:weightSum="100"
+    android:orientation="vertical"
+    tools:context="com.example.yinqinghao.childprotect.AddZoneActivity">
+
+    <com.google.android.gms.maps.MapView
+        android:id="@+id/map_add_zone"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="66"></com.google.android.gms.maps.MapView>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_weight="33"
+        android:layout_height="0dp"
+        android:layout_gravity="center"
+        android:layout_marginTop="20dp"
+        android:orientation="vertical">
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:layout_gravity="center">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/Base.TextAppearance.AppCompat.Body1"
+                android:textSize="20dp"
+                android:text="Zone Description:"/>
+
+            <EditText
+                android:id="@+id/txt_zone_des"
+                android:layout_width="200dp"
+                android:layout_marginLeft="20dp"
+                android:layout_height="match_parent" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="15dp">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/Base.TextAppearance.AppCompat.Body1"
+                android:textSize="20dp"
+                android:layout_gravity="center"
+                android:text="Zone Type:"/>
+
+            <RadioGroup
+                android:id="@+id/radioGroup_zone"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checkedButton="@+id/rb_safe_zone"
+                android:layout_marginLeft="66dp"
+                android:orientation="horizontal">
+
+                <RadioButton
+                    android:id="@+id/rb_safe_zone"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:buttonTint="@android:color/holo_blue_light"
+                    android:text="Safe Zone" />
+
+                <RadioButton
+                    android:id="@+id/rb_danger_zone"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:buttonTint="@android:color/holo_blue_light"
+                    android:text="Danger Zone" />
+
+            </RadioGroup>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="25dp"
+            android:weightSum="100">
+
+            <com.dd.processbutton.FlatButton
+                android:id="@+id/btn_confirm"
+                android:layout_width="0dp"
+                android:layout_weight="100"
+                android:layout_height="40dp"
+                android:text="Confirm"
+                android:textColor="@android:color/white"
+                app:pb_colorNormal="@android:color/holo_blue_light"
+                app:pb_colorPressed="@android:color/holo_blue_dark" />
+
+            <!--<View-->
+                <!--android:layout_width="0dp"-->
+                <!--android:layout_height="0dp"-->
+                <!--android:layout_weight="20">-->
+
+            <!--</View>-->
+
+            <!--<com.dd.processbutton.FlatButton-->
+                <!--android:layout_width="0dp"-->
+                <!--android:layout_weight="40"-->
+                <!--android:layout_height="40dp"-->
+                <!--android:text="Delete"-->
+                <!--android:textColor="@android:color/white"-->
+                <!--app:pb_colorNormal="@android:color/holo_red_light"-->
+                <!--app:pb_colorPressed="@android:color/holo_red_dark" />-->
+
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>
