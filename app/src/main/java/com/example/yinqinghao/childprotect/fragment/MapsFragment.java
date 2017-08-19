@@ -1,19 +1,13 @@
 package com.example.yinqinghao.childprotect.fragment;
 
-import android.annotation.TargetApi;
 import android.app.Dialog;
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
-import android.net.Uri;
-import android.nfc.Tag;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -23,22 +17,18 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import com.aigestudio.wheelpicker.WheelPicker;
-import com.example.yinqinghao.childprotect.GetLocationTask;
-import com.example.yinqinghao.childprotect.MainActivity;
+import com.example.yinqinghao.childprotect.asyncTask.GetLocationTask;
 import com.example.yinqinghao.childprotect.R;
 import com.example.yinqinghao.childprotect.entity.Child;
 import com.example.yinqinghao.childprotect.entity.LocationData;
 import com.example.yinqinghao.childprotect.entity.Zone;
 import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
-import com.google.android.gms.drive.query.Query;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.MapsInitializer;
 import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
@@ -52,19 +42,16 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 
-import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.SortedSet;
 import java.util.TreeMap;
-import java.util.concurrent.CountDownLatch;
 
 public class MapsFragment extends android.app.Fragment implements OnMapReadyCallback,
         GetLocationTask.LocationResponse {
@@ -144,7 +131,16 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
         final List<String> data = new ArrayList<>();
         String sDate = "";
         final SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy");
-        for (String sTime: locationMap.keySet()) {
+        List<String> dates = new ArrayList<>(locationMap.keySet());
+        Collections.sort(dates, new Comparator<String>() {
+            @Override
+            public int compare(String o1, String o2) {
+                Long l1 = Long.valueOf(o1);
+                Long l2 = Long.valueOf(o2);
+                return l2.compareTo(l1);
+            }
+        });
+        for (String sTime: dates) {
             Date date = new Date(Long.parseLong(sTime));
             sDate = format.format(date);
             data.add(sDate);
@@ -499,7 +495,7 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
                 .anchor(0.0f, 1.0f));
         Location camera = mLocation;
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
-                new LatLng(camera.getLatitude(), camera.getLongitude()), 13));
+                new LatLng(camera.getLatitude(), camera.getLongitude()), 12));
     }
 
     @Override

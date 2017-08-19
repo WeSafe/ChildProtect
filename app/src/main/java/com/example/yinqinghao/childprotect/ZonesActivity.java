@@ -14,9 +14,9 @@ import android.widget.AdapterView;
 import android.widget.GridView;
 
 import com.brouding.simpledialog.SimpleDialog;
+import com.example.yinqinghao.childprotect.adapter.GridAdapter;
 import com.example.yinqinghao.childprotect.entity.Zone;
 import com.github.clans.fab.FloatingActionButton;
-import com.google.android.gms.security.ProviderInstaller;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DataSnapshot;
@@ -27,7 +27,6 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class ZonesActivity extends AppCompatActivity {
     private GridView mZonesGrid;

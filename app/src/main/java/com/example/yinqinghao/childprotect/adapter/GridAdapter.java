@@ -1,4 +1,4 @@
-package com.example.yinqinghao.childprotect;
+package com.example.yinqinghao.childprotect.adapter;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -8,6 +8,7 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.example.yinqinghao.childprotect.R;
 import com.example.yinqinghao.childprotect.entity.Zone;
 
 import java.util.ArrayList;

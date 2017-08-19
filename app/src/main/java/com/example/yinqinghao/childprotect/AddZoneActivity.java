@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.location.Location;
 import android.os.Build;
 import android.support.annotation.IdRes;
@@ -20,6 +19,7 @@ import android.widget.RadioGroup;
 import android.widget.Toast;
 
 import com.dd.processbutton.FlatButton;
+import com.example.yinqinghao.childprotect.asyncTask.GetLocationTask;
 import com.example.yinqinghao.childprotect.entity.Zone;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
