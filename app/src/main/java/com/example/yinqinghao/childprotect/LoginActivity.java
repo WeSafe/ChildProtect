@@ -46,6 +46,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.iid.FirebaseInstanceId;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -211,8 +212,16 @@ public class LoginActivity extends AppCompatActivity {
                 eLogin.putString("familyId", familyId);
                 eLogin.putString("parentId", mAuth.getCurrentUser().getUid());
                 eLogin.apply();
-                DatabaseReference refParent = mDb.getReference("family");
-                refParent.child(uid).child("parent").child(familyId).addListenerForSingleValueEvent(mParentListener);
+                String token = FirebaseInstanceId.getInstance().getToken();
+
+
+                DatabaseReference refParent = mDb.getReference("family")
+                        .child(familyId)
+                        .child("parent")
+                        .child(uid);
+                refParent.addListenerForSingleValueEvent(mParentListener);
+                refParent.child("notificationTokens").removeValue();
+                refParent.child("notificationTokens").child(token).setValue(true);
             }
 
             @Override

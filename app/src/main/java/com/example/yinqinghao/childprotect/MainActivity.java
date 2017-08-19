@@ -23,7 +23,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.yinqinghao.childprotect.entity.LocationData;
+import com.example.yinqinghao.childprotect.entity.Zone;
 import com.example.yinqinghao.childprotect.fragment.MapsFragment;
+import com.example.yinqinghao.childprotect.service.MyFirebaseInstanceIDService;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -31,6 +33,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.iid.FirebaseInstanceId;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -72,6 +75,7 @@ public class MainActivity extends AppCompatActivity
                 if (user != null) {
                     // User is signed in
                     Log.d(TAG, "onAuthStateChanged:signed_in:" + user.getUid());
+
                     if (mMapFragment == null)
                         mMapFragment = new MapsFragment();
                     Fragment home = mMapFragment;
@@ -81,6 +85,8 @@ public class MainActivity extends AppCompatActivity
                     String name = sp.getString("name",null);
                     String email = sp.getString("email", null);
                     setUserInfo(name,email);
+
+                    int i = 0;
                 } else {
                     // User is signed out
                     Log.d(TAG, "onAuthStateChanged:signed_out");
