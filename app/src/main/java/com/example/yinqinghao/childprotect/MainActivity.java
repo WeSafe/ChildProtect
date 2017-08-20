@@ -22,23 +22,9 @@ import android.view.MenuItem;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.yinqinghao.childprotect.entity.LocationData;
-import com.example.yinqinghao.childprotect.entity.Zone;
 import com.example.yinqinghao.childprotect.fragment.MapsFragment;
-import com.example.yinqinghao.childprotect.service.MyFirebaseInstanceIDService;
-import com.google.android.gms.maps.model.LatLng;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.iid.FirebaseInstanceId;
-
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener{
@@ -62,6 +48,8 @@ public class MainActivity extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+
+
         drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -84,7 +72,7 @@ public class MainActivity extends AppCompatActivity
                     SharedPreferences sp = getSharedPreferences("ID", Context.MODE_PRIVATE);
                     String name = sp.getString("name",null);
                     String email = sp.getString("email", null);
-                    setUserInfo(name,email);
+                    setUserInfo(email,name);
 
                     int i = 0;
                 } else {

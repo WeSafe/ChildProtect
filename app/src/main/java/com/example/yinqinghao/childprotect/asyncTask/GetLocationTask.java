@@ -43,7 +43,7 @@ public class GetLocationTask extends AsyncTask<String, Void, Location> {
         int i = 0;
         if (Looper.myLooper() == null)
             Looper.prepare();
-        while (latitude == 0 && i != 20) {
+        while (latitude == 0 && i != 50) {
             try {
                 //get the current location
                 getLocationInfo(context);
@@ -73,21 +73,24 @@ public class GetLocationTask extends AsyncTask<String, Void, Location> {
             boolean isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
             //if the network is enabled, get the location by network(fingerprinting) first (fast but not accurate)
             if (isNetworkEnabled) {
-                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, myLocationListener);
+                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 6000, 0, myLocationListener);
                 if (locationManager != null) {
                     lo = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-                    longitude = lo.getLongitude();
-                    latitude = lo.getLatitude();
+                    if (lo != null) {
+                        longitude = lo.getLongitude();
+                        latitude = lo.getLatitude();
+                    }
                 }
             }
             //get the location by gps (trilateration)
             if (isGPSEnabled) {
-                locationManager.removeUpdates(myLocationListener);
-                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, myLocationListener);
+                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 6000, 0, myLocationListener);
                 if (locationManager != null) {
                     lo = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                    longitude = lo.getLongitude();
-                    latitude = lo.getLatitude();
+                    if (lo != null) {
+                        longitude = lo.getLongitude();
+                        latitude = lo.getLatitude();
+                    }
                 }
             }
         } catch (SecurityException e) {
@@ -104,9 +107,13 @@ public class GetLocationTask extends AsyncTask<String, Void, Location> {
      */
     @Override
     protected void onPostExecute(Location location) {
-        locationManager.removeUpdates(myLocationListener);
+        removeListener();
         delegate.locationProcessFinish(location);
         latitude = 0;
+    }
+
+    public void removeListener() {
+        locationManager.removeUpdates(myLocationListener);
     }
 
     /**
@@ -117,6 +124,7 @@ public class GetLocationTask extends AsyncTask<String, Void, Location> {
         public void onLocationChanged(Location location) {
             longitude = location.getLongitude();
             latitude = location.getLatitude();
+            lo = location;
         }
 
         @Override

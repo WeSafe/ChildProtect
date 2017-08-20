@@ -1,6 +1,7 @@
 <android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     xmlns:fab="http://schemas.android.com/apk/res-auto"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -38,6 +39,10 @@
         fab:menu_icon="@drawable/ic_history_24dp"
         fab:menu_labels_ellipsize="end"
         fab:menu_labels_singleLine="true"
+        fab:menu_colorNormal="@color/buttonColor"
+        fab:menu_colorPressed="@color/buttonColorDark"
+        app:fab_colorNormal="@color/buttonColor"
+        app:fab_colorPressed="@color/buttonColorDark"
         fab:menu_fab_label="History Route">
 
     </com.github.clans.fab.FloatingActionMenu>
@@ -49,6 +54,8 @@
         android:layout_gravity="bottom|right"
         android:layout_marginBottom="8dp"
         android:layout_marginRight="8dp"
+        app:fab_colorNormal="@color/buttonColor"
+        app:fab_colorPressed="@color/buttonColorDark"
         android:src="@drawable/ic_my_location_24dp" />
 
 </android.support.design.widget.CoordinatorLayout>

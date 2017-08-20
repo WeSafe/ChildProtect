@@ -3,6 +3,7 @@ package com.example.yinqinghao.childprotect.fragment;
 import android.app.Dialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
@@ -10,9 +11,14 @@ import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
+import android.view.animation.BounceInterpolator;
+import android.view.animation.TranslateAnimation;
 import android.widget.Button;
 import android.widget.Toast;
 
@@ -29,6 +35,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.MapsInitializer;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
@@ -53,6 +60,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import tourguide.tourguide.Overlay;
+import tourguide.tourguide.Pointer;
+import tourguide.tourguide.ToolTip;
+import tourguide.tourguide.TourGuide;
+
 public class MapsFragment extends android.app.Fragment implements OnMapReadyCallback,
         GetLocationTask.LocationResponse {
 
@@ -62,6 +74,7 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
     private static final int ZONE_ACTIVITY = 876;
     private static final String TAG = "MapsFragment";
     private GetLocationTask locationTask;
+//    private GetGPSTask locationTask;
     private Location mLocation;
     private MapView mMapView;
     private View mView;
@@ -84,6 +97,7 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
     private Map<String, Marker> mChildMarkers;
     private List<Circle> mZones;
     private List<Marker> mCenters;
+    private List<Polyline> mLines;
     private long mTodayTime;
 
     public MapsFragment() {
@@ -116,9 +130,13 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
             mZones = new ArrayList<>();
             mCenters = new ArrayList<>();
             mFamilyId = "";
+
+
             initListener();
+
         }
     }
+
 
     private void showHistoryPicker(Child child) {
         final Dialog d = new Dialog(getActivity());
@@ -184,6 +202,12 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
             marker.remove();
         }
         mMyMarker.remove();
+        if (mLines != null) {
+            for (Polyline p : mLines) {
+                p.remove();
+            }
+        }
+        mLines = new ArrayList<>();
         for (final Object o: dataTreeMap.values().toArray()) {
             final LocationData l = (LocationData) o;
             if (lat != l.getLat() || lng != l.getLng()) {
@@ -193,6 +217,7 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
                         LatLng camera = new LatLng(l.getLat(), l.getLng());
                         routeOption.add(camera);
                         Polyline polyline = mMap.addPolyline(routeOption);
+                        mLines.add(polyline);
                         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(camera, 13));
                     }
                 }, delay);
@@ -490,8 +515,12 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
     public void locationProcessFinish(Location location) {
         locationTask = null;
         mLocation = location;
+        if (mLocation == null)
+            return;
         mMyMarker = mMap.addMarker(new MarkerOptions()
-                .position(new LatLng(mLocation.getLatitude(),mLocation.getLongitude())).title("My LocationData")
+                .position(new LatLng(mLocation.getLatitude(),mLocation.getLongitude()))
+                .title("My Location")
+//                .icon(BitmapDescriptorFactory.fromResource(R.drawable.fat))
                 .anchor(0.0f, 1.0f));
         Location camera = mLocation;
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(

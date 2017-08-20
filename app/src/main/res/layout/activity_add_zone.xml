@@ -63,14 +63,14 @@
                     android:id="@+id/rb_safe_zone"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:buttonTint="@android:color/holo_blue_light"
+                    android:buttonTint="@color/colorPrimary"
                     android:text="Safe Zone" />
 
                 <RadioButton
                     android:id="@+id/rb_danger_zone"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:buttonTint="@android:color/holo_blue_light"
+                    android:buttonTint="@color/colorPrimary"
                     android:text="Danger Zone" />
 
             </RadioGroup>
@@ -90,8 +90,8 @@
                 android:layout_height="40dp"
                 android:text="Confirm"
                 android:textColor="@android:color/white"
-                app:pb_colorNormal="@android:color/holo_blue_light"
-                app:pb_colorPressed="@android:color/holo_blue_dark" />
+                app:pb_colorNormal="@color/buttonColor"
+                app:pb_colorPressed="@color/buttonColorDark" />
 
             <!--<View-->
                 <!--android:layout_width="0dp"-->

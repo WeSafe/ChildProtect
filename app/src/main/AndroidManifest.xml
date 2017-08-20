@@ -4,6 +4,7 @@
 
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:allowBackup="true"
@@ -31,7 +32,7 @@
             android:label="@string/title_activity_login" />
         <activity
             android:name=".ZonesActivity"
-            android:label="ZonesActivity"
+            android:label="Family Alert Zones"
             android:parentActivityName=".MainActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -39,7 +40,7 @@
         </activity>
         <activity
             android:name=".AddZoneActivity"
-            android:label="AddZoneActivity"
+            android:label="Zone"
             android:parentActivityName=".ZonesActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"

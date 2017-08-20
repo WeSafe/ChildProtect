@@ -19,12 +19,18 @@ android {
     }
 }
 
+repositories {
+    mavenCentral()
+    maven() {
+        url "https://oss.sonatype.org/content/repositories/snapshots"
+    }
+}
+
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
-    //    compile 'com.google.android.gms:play-services-maps:10.0.1'
     compile 'com.android.support:appcompat-v7:25.3.1'
     compile 'com.android.support:design:25.3.1'
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
@@ -39,11 +45,12 @@ dependencies {
     compile 'com.github.dmytrodanylyk.android-process-button:library:1.0.0'
     compile 'com.brouding:android-simple-dialog:0.3.0'
     compile 'com.google.firebase:firebase-messaging:10.2.6'
+    compile 'com.github.arimorty:floatingsearchview:2.1.1'
+    compile ('com.github.worker8:tourguide:1.0.17-SNAPSHOT@aar') {
+        transitive=true
+    }
     testCompile 'junit:junit:4.12'
 }
-
-
-
 
 
 
