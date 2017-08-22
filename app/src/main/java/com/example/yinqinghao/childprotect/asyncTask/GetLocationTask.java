@@ -9,6 +9,8 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Looper;
 
+import java.util.Calendar;
+
 /**
  * Created by yinqinghao on 1/5/17.
  *
@@ -28,13 +30,15 @@ public class GetLocationTask extends AsyncTask<String, Void, Location> {
     private static double longitude;
     private static double latitude;
     private Activity activity;
+    private static int loopTimes;
     //location listerer
     private static MyLocationListener myLocationListener;
 
-    public GetLocationTask(GetLocationTask.LocationResponse delegate, Activity activity) {
+    public GetLocationTask(GetLocationTask.LocationResponse delegate, Activity activity, int loopTimes) {
         this.delegate = delegate;
         this.context = activity;
         this.activity = activity;
+        this.loopTimes = loopTimes;
         myLocationListener = new MyLocationListener();
     }
 
@@ -43,7 +47,7 @@ public class GetLocationTask extends AsyncTask<String, Void, Location> {
         int i = 0;
         if (Looper.myLooper() == null)
             Looper.prepare();
-        while (latitude == 0 && i != 50) {
+        while (latitude == 0 && i != 5) {
             try {
                 //get the current location
                 getLocationInfo(context);
@@ -73,23 +77,33 @@ public class GetLocationTask extends AsyncTask<String, Void, Location> {
             boolean isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
             //if the network is enabled, get the location by network(fingerprinting) first (fast but not accurate)
             if (isNetworkEnabled) {
-                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 6000, 0, myLocationListener);
+                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, myLocationListener);
                 if (locationManager != null) {
-                    lo = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-                    if (lo != null) {
-                        longitude = lo.getLongitude();
-                        latitude = lo.getLatitude();
+                    Location networkLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                    if(networkLocation != null && networkLocation.getTime() > Calendar.getInstance().getTimeInMillis() - 2 * 60 * 1000) {
+                        longitude = networkLocation.getLongitude();
+                        latitude = networkLocation.getLatitude();
+                        lo = networkLocation;
                     }
                 }
             }
             //get the location by gps (trilateration)
             if (isGPSEnabled) {
-                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 6000, 0, myLocationListener);
+                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, myLocationListener);
                 if (locationManager != null) {
-                    lo = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                    if (lo != null) {
-                        longitude = lo.getLongitude();
-                        latitude = lo.getLatitude();
+                    Location GPSLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                    int i = loopTimes;
+                    while ((GPSLocation == null
+                            || ((GPSLocation != null) &&  GPSLocation.getTime() < Calendar.getInstance().getTimeInMillis() - 2 * 60 * 1000))
+                            && i >= 0)  {
+                        Thread.sleep(500);
+                        i--;
+                    }
+
+                    if(GPSLocation != null && GPSLocation.getTime() > Calendar.getInstance().getTimeInMillis() - 2 * 60 * 1000) {
+                        longitude = GPSLocation.getLongitude();
+                        latitude = GPSLocation.getLatitude();
+                        lo = GPSLocation;
                     }
                 }
             }
@@ -122,8 +136,6 @@ public class GetLocationTask extends AsyncTask<String, Void, Location> {
     public static class MyLocationListener implements LocationListener {
         @Override
         public void onLocationChanged(Location location) {
-            longitude = location.getLongitude();
-            latitude = location.getLatitude();
             lo = location;
         }
 

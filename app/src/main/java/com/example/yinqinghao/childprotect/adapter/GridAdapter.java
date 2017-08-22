@@ -55,7 +55,7 @@ public class GridAdapter extends BaseAdapter {
             ImageView imageView = (ImageView)grid.findViewById(R.id.grid_image);
             Zone zone = mZones.get(position);
             textView.setText(zone.getDes());
-            imageView.setImageResource(zone.getStatus().equals("safe") ? R.drawable.ic_security_24dp : R.drawable.ic_pan_tool_24dp);
+            imageView.setImageResource(zone.getStatus().equals("safe") ? R.drawable.sz : R.drawable.da);
         } else {
             grid = (View) convertView;
         }

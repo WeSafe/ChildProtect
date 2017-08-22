@@ -27,25 +27,43 @@
         <!--fab_colorPressed="@color/colorPrimaryDark"-->
         <!--fab_colorRipple="@color/colorAccent"/>-->
 
-    <com.github.clans.fab.FloatingActionMenu
-        android:id="@+id/menu_history"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="true"
-        android:paddingRight="80dp"
-        android:paddingBottom="8dp"
-        android:paddingLeft="10dp"
-        fab:menu_icon="@drawable/ic_history_24dp"
-        fab:menu_labels_ellipsize="end"
-        fab:menu_labels_singleLine="true"
-        fab:menu_colorNormal="@color/buttonColor"
-        fab:menu_colorPressed="@color/buttonColorDark"
-        app:fab_colorNormal="@color/buttonColor"
-        app:fab_colorPressed="@color/buttonColorDark"
-        fab:menu_fab_label="History Route">
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent">
+        <com.github.clans.fab.FloatingActionMenu
+            android:id="@+id/menu_history"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:paddingRight="80dp"
+            android:paddingBottom="8dp"
+            android:paddingLeft="10dp"
+            fab:menu_icon="@drawable/ic_history_24dp"
+            fab:menu_labels_ellipsize="end"
+            fab:menu_labels_singleLine="true"
+            fab:menu_colorNormal="@color/buttonColor"
+            fab:menu_colorPressed="@color/buttonColorDark"
+            app:fab_colorNormal="@color/buttonColor"
+            app:fab_colorPressed="@color/buttonColorDark"
+            fab:menu_fab_label="History Route">
 
-    </com.github.clans.fab.FloatingActionMenu>
+        </com.github.clans.fab.FloatingActionMenu>
+
+        <ImageView
+            android:id="@+id/historyTutor"
+            android:background="#0000"
+            android:src="@drawable/transparent"
+            android:scaleType="fitXY"
+            android:layout_width="66dp"
+            android:layout_height="66dp"
+            android:layout_marginRight="79dp"
+            android:layout_marginEnd="79dp"
+            android:layout_marginBottom="11dp"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true" />
+    </RelativeLayout>
 
     <com.github.clans.fab.FloatingActionButton
         android:id="@+id/fab_realtime"

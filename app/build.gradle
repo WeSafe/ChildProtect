@@ -12,6 +12,9 @@ android {
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
+        debug {
+            debuggable true
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
@@ -19,10 +22,9 @@ android {
     }
 }
 
-repositories {
-    mavenCentral()
-    maven() {
-        url "https://oss.sonatype.org/content/repositories/snapshots"
+allprojects {
+    repositories {
+        maven { url "https://jitpack.io" }
     }
 }
 
@@ -46,9 +48,7 @@ dependencies {
     compile 'com.brouding:android-simple-dialog:0.3.0'
     compile 'com.google.firebase:firebase-messaging:10.2.6'
     compile 'com.github.arimorty:floatingsearchview:2.1.1'
-    compile ('com.github.worker8:tourguide:1.0.17-SNAPSHOT@aar') {
-        transitive=true
-    }
+    compile 'com.github.wooplr:Spotlight:1.2.3'
     testCompile 'junit:junit:4.12'
 }
 

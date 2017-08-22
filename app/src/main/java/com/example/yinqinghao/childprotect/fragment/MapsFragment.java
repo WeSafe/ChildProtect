@@ -49,6 +49,8 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.wooplr.spotlight.SpotlightView;
+import com.wooplr.spotlight.utils.SpotlightSequence;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -60,14 +62,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import tourguide.tourguide.Overlay;
-import tourguide.tourguide.Pointer;
-import tourguide.tourguide.ToolTip;
-import tourguide.tourguide.TourGuide;
-
 public class MapsFragment extends android.app.Fragment implements OnMapReadyCallback,
         GetLocationTask.LocationResponse {
-
     private GoogleMap mMap;
 
     private static final int MY_PERMISSIONS_REQUEST_FINE_LOCATION = 123;
@@ -81,6 +77,7 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
 
     private FloatingActionMenu mMenuHistory;
     private FloatingActionButton mButtenRealTime;
+    private View mHisTutor;
 
     private FirebaseAuth mAuth;
     private FirebaseDatabase mDb;
@@ -122,6 +119,7 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
 
             mMenuHistory = (FloatingActionMenu) mView.findViewById(R.id.menu_history);
             mButtenRealTime = (FloatingActionButton) mView.findViewById(R.id.fab_realtime);
+            mHisTutor = mView.findViewById(R.id.historyTutor);
             mMenuHistory.hideMenuButton(false);
             mButtenRealTime.hide(false);
 
@@ -131,9 +129,7 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
             mCenters = new ArrayList<>();
             mFamilyId = "";
 
-
             initListener();
-
         }
     }
 
@@ -201,10 +197,12 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
         for (Marker marker : mChildMarkers.values()) {
             marker.remove();
         }
-        mMyMarker.remove();
-        if (mLines != null) {
-            for (Polyline p : mLines) {
-                p.remove();
+        if (mMyMarker != null) {
+            mMyMarker.remove();
+            if (mLines != null) {
+                for (Polyline p : mLines) {
+                    p.remove();
+                }
             }
         }
         mLines = new ArrayList<>();
@@ -234,7 +232,7 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
             final FloatingActionButton childHistoryFab = new FloatingActionButton(getActivity());
             childHistoryFab.setButtonSize(FloatingActionButton.SIZE_MINI);
             childHistoryFab.setLabelText(child.getFirstName());
-            childHistoryFab.setImageResource(R.drawable.ic_menu_camera);
+            childHistoryFab.setImageResource(R.drawable.ic_child_care_black_24dp);
             mMenuHistory.addMenuButton(childHistoryFab);
             childHistoryFab.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -269,6 +267,7 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
             @Override
             public void run() {
                 mButtenRealTime.show(true);
+                showTutorial(mButtenRealTime, mHisTutor);
             }
         }, 550);
     }
@@ -403,6 +402,7 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
                 .position(latLng)
                 .anchor(0.0f, 1.0f)
                 .title(des));
+        center.remove();
 
         CircleOptions circleOptions = new CircleOptions()
                 .center(latLng)
@@ -467,8 +467,8 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
                     != PackageManager.PERMISSION_GRANTED) {
                 requestPermissions(new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
                         MY_PERMISSIONS_REQUEST_FINE_LOCATION);
-            } else
-                locationTask.execute();
+            }
+//                locationTask.execute();
         }
     }
 
@@ -480,7 +480,14 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    locationTask.execute();
+                    try {
+                        if (locationTask == null) {
+                            locationTask = new GetLocationTask(this, getActivity(), 7);
+                        }
+                        locationTask.execute();
+                    } catch (IllegalStateException ex) {
+
+                    }
                 } else
                     Toast.makeText(getActivity(), "Can't get the location, please grant the permission",
                             Toast.LENGTH_SHORT);
@@ -501,13 +508,17 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
         mMap = googleMap;
         mMap.getUiSettings().setMapToolbarEnabled(false);
         getChildLocation();
-        locationTask = new GetLocationTask(this, getActivity());
+        locationTask = new GetLocationTask(this, getActivity(), 7);
         checkPermission();
+        try {
+            locationTask.execute();
+        } catch (IllegalStateException ex) {
 
+        }
     }
 
     private void markMyLocation() {
-        locationTask = new GetLocationTask(this, getActivity());
+        locationTask = new GetLocationTask(this, getActivity(), 7);
         locationTask.execute();
     }
 
@@ -515,12 +526,15 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
     public void locationProcessFinish(Location location) {
         locationTask = null;
         mLocation = location;
-        if (mLocation == null)
+        if (mLocation == null) {
+            Log.d(TAG, "can't get the location");
             return;
+        }
         mMyMarker = mMap.addMarker(new MarkerOptions()
                 .position(new LatLng(mLocation.getLatitude(),mLocation.getLongitude()))
                 .title("My Location")
-//                .icon(BitmapDescriptorFactory.fromResource(R.drawable.fat))
+                .icon(BitmapDescriptorFactory.defaultMarker(
+                        BitmapDescriptorFactory.HUE_AZURE))
                 .anchor(0.0f, 1.0f));
         Location camera = mLocation;
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
@@ -543,5 +557,14 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
             return;
         }
         super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    private void showTutorial(View view, View view2) {
+        SpotlightSequence.getInstance(getActivity(),null)
+                .addSpotlight(view,
+                        "Real-Time Location", "Click to know the location of your kids ", "+++wq+sassss=q++")
+                .addSpotlight(view2,
+                        "History Route", "Click here to see the history route of your kids", "-s-saqwsssq=---")
+                .startSequence();
     }
 }

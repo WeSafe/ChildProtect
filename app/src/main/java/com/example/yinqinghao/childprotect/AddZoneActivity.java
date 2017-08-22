@@ -1,5 +1,6 @@
 package com.example.yinqinghao.childprotect;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -17,6 +18,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.RadioGroup;
 import android.widget.Toast;
@@ -39,13 +41,9 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.wooplr.spotlight.utils.SpotlightSequence;
 
 import java.util.Date;
-
-import tourguide.tourguide.Overlay;
-import tourguide.tourguide.Pointer;
-import tourguide.tourguide.ToolTip;
-import tourguide.tourguide.TourGuide;
 
 public class AddZoneActivity extends AppCompatActivity implements OnMapReadyCallback,
         GetLocationTask.LocationResponse, GoogleMap.OnMarkerDragListener {
@@ -53,10 +51,13 @@ public class AddZoneActivity extends AppCompatActivity implements OnMapReadyCall
     private static final int MY_PERMISSIONS_REQUEST_FINE_LOCATION = 123;
     private static final double RADIUS_OF_EARTH_METERS = 6371009;
     private static final String TAG = "AddZoneActivity";
+    private static boolean isEdit;
 
     private FlatButton mConfirm;
     private EditText mDesEditText;
     private RadioGroup mZoneRadioGroup;
+    private View mCenterTutor;
+    private View mRadiusTutor;
 
     private FirebaseDatabase mDb;
     private GetLocationTask locationTask;
@@ -90,8 +91,19 @@ public class AddZoneActivity extends AppCompatActivity implements OnMapReadyCall
         mZoneRadioGroup = (RadioGroup) findViewById(R.id.radioGroup_zone);
         mDesEditText = (EditText) findViewById(R.id.txt_zone_des);
         mConfirm = (FlatButton) findViewById(R.id.btn_confirm);
+        mCenterTutor = findViewById(R.id.center_marker_tour);
+        mRadiusTutor = findViewById(R.id.radius_marker_tour);
+
         mConfirm.setOnClickListener(mConfirmListener);
         mZoneRadioGroup.setOnCheckedChangeListener(mCheckedChangeListener);
+        mDesEditText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (!hasFocus) {
+                    hideKeyboard(v);
+                }
+            }
+        });
     }
 
     private void setConfirmListener() {
@@ -111,7 +123,7 @@ public class AddZoneActivity extends AppCompatActivity implements OnMapReadyCall
                         .child(familyId);
                 Intent intent = getIntent();
                 Zone zone = intent.getParcelableExtra("zone");
-                boolean isEdit = zone != null;
+                isEdit = zone != null;
                 String zoneId;
                 final Zone zone1;
                 if (!isEdit) {
@@ -186,12 +198,28 @@ public class AddZoneActivity extends AppCompatActivity implements OnMapReadyCall
     public void locationProcessFinish(Location location) {
         locationTask = null;
         mLocation = location;
+        if (location == null) {
+            mLocation = new Location("");
+            mLocation.setLatitude(-37.8668);
+            mLocation.setLongitude(145.016);
+        }
+        if (!isEdit) {
+            showTutorial(mCenterTutor, mRadiusTutor);
+        }
         mCenter = new LatLng(mLocation.getLatitude(),mLocation.getLongitude());
         mRadiusMeters = 500;
         drawCircle(mCenter, mRadiusMeters,
                 ContextCompat.getColor(this,mStrokeColor),
                 ContextCompat.getColor(this,mFillColor));
+    }
 
+    private void showTutorial(View view, View view2) {
+        SpotlightSequence.getInstance(this,null)
+                .addSpotlight(view,
+                        "Center of The Area", "Long Click to drag the center of the area.", "1eqsasswwssssq")
+                .addSpotlight(view2,
+                        "Radius of The Area", "Long Click to adjust the radius of the area", "1qwdassssssssa")
+                .startSequence();
     }
 
     private void drawCircle(LatLng latLng, double radius, int strokeColor, int fillColor) {
@@ -203,8 +231,7 @@ public class AddZoneActivity extends AppCompatActivity implements OnMapReadyCall
         mRadiusMarker = mMap.addMarker(new MarkerOptions()
                 .position(toRadiusLatLng(latLng, radius))
                 .draggable(true)
-                .icon(BitmapDescriptorFactory.defaultMarker(
-                        BitmapDescriptorFactory.HUE_AZURE)));
+                .icon(BitmapDescriptorFactory.fromResource(R.drawable.drag)));
 
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
                 new LatLng(latLng.latitude, latLng.longitude), 15));
@@ -255,8 +282,13 @@ public class AddZoneActivity extends AppCompatActivity implements OnMapReadyCall
         Intent intent = getIntent();
         Zone zone = intent.getParcelableExtra("zone");
         if (zone == null) {
-            locationTask = new GetLocationTask(this,this);
+            locationTask = new GetLocationTask(this,this, 0);
             checkPermission();
+            try {
+                locationTask.execute();
+            } catch (IllegalStateException ex) {
+
+            }
         } else {
             boolean isSafe = zone.getStatus().equals("safe");
             mStrokeColor = isSafe ? R.color.safeStrokeColor : R.color.dangerStrokeColor;
@@ -272,6 +304,11 @@ public class AddZoneActivity extends AppCompatActivity implements OnMapReadyCall
 
     }
 
+    public void hideKeyboard(View view) {
+        InputMethodManager inputMethodManager =(InputMethodManager)getSystemService(Activity.INPUT_METHOD_SERVICE);
+        inputMethodManager.hideSoftInputFromWindow(view.getWindowToken(), 0);
+    }
+
     /**
      * Check the location service permission and request it if there is no permission
      */
@@ -282,7 +319,11 @@ public class AddZoneActivity extends AppCompatActivity implements OnMapReadyCall
                 requestPermissions(new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
                         MY_PERMISSIONS_REQUEST_FINE_LOCATION);
             } else
-                locationTask.execute();
+                try {
+                    locationTask.execute();
+                } catch (IllegalStateException ex) {
+
+                }
         }
     }
 
@@ -294,7 +335,11 @@ public class AddZoneActivity extends AppCompatActivity implements OnMapReadyCall
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    locationTask.execute();
+                    try {
+                        locationTask.execute();
+                    } catch (IllegalStateException ex) {
+
+                    }
                 } else
                     Toast.makeText(this, "Can't get the location, please grant the permission",
                             Toast.LENGTH_SHORT);

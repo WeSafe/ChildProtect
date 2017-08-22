@@ -4,7 +4,7 @@
     <group android:checkableBehavior="single">
         <item
             android:id="@+id/nav_map"
-            android:icon="@drawable/ic_menu_slideshow"
+            android:icon="@drawable/ic_location_on_black_24dp"
             android:title="My kid's Location" />
         <!--<item-->
             <!--android:id="@+id/nav_camera"-->
@@ -12,15 +12,15 @@
             <!--android:title="Family" />-->
         <item
             android:id="@+id/nav_zones"
-            android:icon="@drawable/ic_menu_gallery"
-            android:title="Custom Zone" />
+            android:icon="@drawable/ic_adjust_black_24dp"
+            android:title="Geo fencing" />
     </group>
 
     <item android:title="Account">
         <menu>
             <item
                 android:id="@+id/nav_logout"
-                android:icon="@drawable/ic_menu_send"
+                android:icon="@drawable/ic_exit_to_app_black_24dp"
                 android:title="Log out" />
         </menu>
     </item>
