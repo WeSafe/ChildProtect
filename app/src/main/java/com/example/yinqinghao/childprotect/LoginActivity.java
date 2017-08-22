@@ -265,7 +265,7 @@ public class LoginActivity extends AppCompatActivity {
 //                    FirebaseUser user = mAuth.getCurrentUser();
 //                    final String email = user.getEmail();
 //                    final String uid = user.getUid();
-//                }
+//                }qwe
 //            }
 //        });
 //    }
