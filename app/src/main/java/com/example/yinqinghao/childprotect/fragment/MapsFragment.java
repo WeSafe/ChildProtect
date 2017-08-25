@@ -3,7 +3,7 @@ package com.example.yinqinghao.childprotect.fragment;
 import android.app.Dialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
+import android.content.res.Resources;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
@@ -11,25 +11,23 @@ import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.AlphaAnimation;
-import android.view.animation.Animation;
-import android.view.animation.BounceInterpolator;
-import android.view.animation.TranslateAnimation;
 import android.widget.Button;
 import android.widget.Toast;
 
 import com.aigestudio.wheelpicker.WheelPicker;
 import com.example.yinqinghao.childprotect.asyncTask.GetLocationTask;
 import com.example.yinqinghao.childprotect.R;
+import com.example.yinqinghao.childprotect.clusterMarker.MarkerRender;
 import com.example.yinqinghao.childprotect.entity.Child;
 import com.example.yinqinghao.childprotect.entity.LocationData;
+import com.example.yinqinghao.childprotect.clusterMarker.MarkerItem;
 import com.example.yinqinghao.childprotect.entity.Zone;
 import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
@@ -39,6 +37,7 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
@@ -49,7 +48,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.wooplr.spotlight.SpotlightView;
+import com.google.maps.android.clustering.ClusterManager;
 import com.wooplr.spotlight.utils.SpotlightSequence;
 
 import java.text.SimpleDateFormat;
@@ -89,12 +88,15 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
     private Handler mUiHandler = new Handler();
 
     private String mFamilyId;
-    private Marker mMyMarker;
+//    private Marker mMyMarker;
+    private MarkerItem mMyMarkerItem;
     private Map<String, Child> mChildren;
-    private Map<String, Marker> mChildMarkers;
+//    private Map<String, Marker> mChildMarkers;
+    private Map<String, MarkerItem> mChildMarkerItems;
     private List<Circle> mZones;
     private List<Marker> mCenters;
     private List<Polyline> mLines;
+    private ClusterManager<MarkerItem> mClusterManager;
     private long mTodayTime;
 
     public MapsFragment() {
@@ -124,7 +126,8 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
             mButtenRealTime.hide(false);
 
             mTodayTime = Child.getDatetime();
-            mChildMarkers = new HashMap<>();
+//            mChildMarkers = new HashMap<>();
+            mChildMarkerItems = new HashMap<>();
             mZones = new ArrayList<>();
             mCenters = new ArrayList<>();
             mFamilyId = "";
@@ -191,24 +194,31 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
         TreeMap<String, LocationData> dataTreeMap = Child.sortLocationsAESC(locationDatas);
         Handler routeHandler = new Handler();
         final PolylineOptions routeOption = new PolylineOptions();
+        Object [] locations = dataTreeMap.values().toArray();
         long delay = 800;
         double lat = 0;
         double lng = 0;
-        for (Marker marker : mChildMarkers.values()) {
-            marker.remove();
+
+        if (mClusterManager != null) {
+            for (MarkerItem markerItem: mChildMarkerItems.values())
+                mClusterManager.removeItem(markerItem);
+
+            if (mMyMarkerItem != null)
+                mClusterManager.removeItem(mMyMarkerItem);
         }
-        if (mMyMarker != null) {
-            mMyMarker.remove();
-            if (mLines != null) {
-                for (Polyline p : mLines) {
-                    p.remove();
-                }
+
+        if (mLines != null) {
+            for (Polyline p : mLines) {
+                p.remove();
             }
         }
+
         mLines = new ArrayList<>();
-        for (final Object o: dataTreeMap.values().toArray()) {
+
+        for (final Object o: locations) {
             final LocationData l = (LocationData) o;
             if (lat != l.getLat() || lng != l.getLng()) {
+
                 routeHandler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
@@ -219,7 +229,7 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
                         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(camera, 13));
                     }
                 }, delay);
-                delay += 800;
+                delay += 100;
             }
             lat = l.getLat();
             lng = l.getLng();
@@ -248,6 +258,7 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
             @Override
             public void onClick(View v) {
                 mMap.clear();
+                mClusterManager.clearItems();
                 markMyLocation();
                 getChildLocation();
             }
@@ -295,16 +306,28 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
                         childLocations.put(mTodayTime + "", locationDatas);
                     }
 
-                    if (mChildMarkers.containsKey(childId)) {
-                        Marker childMarker = mChildMarkers.get(childId);
-                        childMarker.remove();
-                        Marker newMarker = mMap.addMarker(new MarkerOptions()
-                                .position(new LatLng(locationData.getLat(),locationData.getLng()))
-                                .title(child.getFirstName())
-                                .snippet(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(locationData.getDatetime()))
-                                .anchor(0.0f, 1.0f));
-                        mChildMarkers.put(childId,newMarker);
-                        newMarker.showInfoWindow();
+//                    if (mChildMarkers.containsKey(childId)) {
+//                        Marker childMarker = mChildMarkers.get(childId);
+//                        childMarker.remove();
+//                        Marker newMarker = mMap.addMarker(new MarkerOptions()
+//                                .position(new LatLng(locationData.getLat(),locationData.getLng()))
+//                                .title(child.getFirstName())
+//                                .snippet(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(locationData.getDatetime()))
+//                                .anchor(0.0f, 1.0f));
+//                        mChildMarkers.put(childId,newMarker);
+//                        newMarker.showInfoWindow();
+//                    }
+
+                    if (mChildMarkerItems.containsKey(childId)) {
+                        MarkerItem childMarker = mChildMarkerItems.get(childId);
+                        if (mClusterManager != null) {
+                            mClusterManager.removeItem(childMarker);
+                        }
+
+                        MarkerItem newMarkerItem = new MarkerItem(new LatLng(locationData.getLat(),locationData.getLng()),
+                                child.getFirstName(), new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(locationData.getDatetime()));
+                        mClusterManager.addItem(newMarkerItem);
+                        mChildMarkerItems.put(childId, newMarkerItem);
                     }
                 }
             }
@@ -339,7 +362,7 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
                         if (mChildren.get(childId).getMostRecentLocation() == null) return;
                         LocationData locationData = mChildren.get(childId).getMostRecentLocation();
                         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(
-                                new LatLng(locationData.getLat(), locationData.getLng()), 12));
+                                new LatLng(locationData.getLat(), locationData.getLng()), 13));
                     }
                 }
             }
@@ -396,7 +419,6 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
         int fillColor = ContextCompat.getColor(getActivity() ,
                 isSafe ? R.color.safeFillColor : R.color.dangerFillColor);
         String des = zone.getDes();
-        String id = zone.getId();
 
         Marker center = mMap.addMarker(new MarkerOptions()
                 .position(latLng)
@@ -428,13 +450,6 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
         refZone.addListenerForSingleValueEvent(mZoneDataListener);
     }
 
-//    private void saveFid() {
-//        SharedPreferences.Editor editor = getActivity().getSharedPreferences("ID", Context.MODE_PRIVATE).edit();
-//        editor.putString("familyId", mFamilyId);
-//        editor.putString("parentId", mAuth.getCurrentUser().getUid());
-//        editor.apply();
-//    }
-
     private void removeLocationListener() {
         DatabaseReference refChildren = mDb.getReference("family").child(mFamilyId)
                 .child("child");
@@ -449,13 +464,19 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
     private void addChildMarker(Child c) {
         LocationData locationData = c.getMostRecentLocation();
         if (locationData == null)   return;
-        Marker child = mMap.addMarker(new MarkerOptions()
-                .position(new LatLng(locationData.getLat(),locationData.getLng()))
-                .title(c.getFirstName())
-                .snippet(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(locationData.getDatetime()))
-                .anchor(0.0f, 1.0f));
-        mChildMarkers.put(c.getUid(),child);
-        child.showInfoWindow();
+//        Marker child = mMap.addMarker(new MarkerOptions()
+//                .position(new LatLng(locationData.getLat(),locationData.getLng()))
+//                .title(c.getFirstName())
+//                .snippet(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(locationData.getDatetime()))
+//                .anchor(0.0f, 1.0f));
+//        mChildMarkers.put(c.getUid(),child);
+//        child.showInfoWindow();
+        MarkerItem newMarkerItem = new MarkerItem(new LatLng(locationData.getLat(),locationData.getLng()),
+                c.getFirstName(), new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(locationData.getDatetime()));
+        mClusterManager.addItem(newMarkerItem);
+        mClusterManager.cluster();
+        mChildMarkerItems.put(c.getUid(), newMarkerItem);
+
     }
 
     /**
@@ -482,7 +503,7 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     try {
                         if (locationTask == null) {
-                            locationTask = new GetLocationTask(this, getActivity(), 7);
+                            locationTask = new GetLocationTask(this, getActivity(), 4);
                         }
                         locationTask.execute();
                     } catch (IllegalStateException ex) {
@@ -507,8 +528,11 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         mMap.getUiSettings().setMapToolbarEnabled(false);
+
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(-37.8668, 145.016), 13));
+        setUpClusterer();
         getChildLocation();
-        locationTask = new GetLocationTask(this, getActivity(), 7);
+        locationTask = new GetLocationTask(this, getActivity(), 4);
         checkPermission();
         try {
             locationTask.execute();
@@ -517,8 +541,16 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
         }
     }
 
+    private void setUpClusterer() {
+        mClusterManager = new ClusterManager<>(getActivity(), mMap);
+        MarkerRender render = new MarkerRender(getActivity(),mMap,mClusterManager);
+        render.setMinClusterSize(1);
+        mClusterManager.setRenderer(render);
+        mMap.setOnCameraIdleListener(mClusterManager);
+    }
+
     private void markMyLocation() {
-        locationTask = new GetLocationTask(this, getActivity(), 7);
+        locationTask = new GetLocationTask(this, getActivity(), 4);
         locationTask.execute();
     }
 
@@ -530,15 +562,22 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
             Log.d(TAG, "can't get the location");
             return;
         }
-        mMyMarker = mMap.addMarker(new MarkerOptions()
-                .position(new LatLng(mLocation.getLatitude(),mLocation.getLongitude()))
-                .title("My Location")
-                .icon(BitmapDescriptorFactory.defaultMarker(
-                        BitmapDescriptorFactory.HUE_AZURE))
-                .anchor(0.0f, 1.0f));
         Location camera = mLocation;
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
-                new LatLng(camera.getLatitude(), camera.getLongitude()), 12));
+                new LatLng(camera.getLatitude(), camera.getLongitude()), 13));
+
+        LatLng myLatLng = new LatLng(mLocation.getLatitude(),mLocation.getLongitude());
+//        mMyMarker = mMap.addMarker(new MarkerOptions()
+//                .position(myLatLng)
+//                .title("My Location")
+//                .icon(BitmapDescriptorFactory.defaultMarker(
+//                        BitmapDescriptorFactory.HUE_AZURE))
+//                .anchor(0.0f, 1.0f));
+        mMyMarkerItem = new MarkerItem(myLatLng, "My Location", "");
+        mMyMarkerItem.setmIcon(BitmapDescriptorFactory.defaultMarker(
+                        BitmapDescriptorFactory.HUE_AZURE));
+        mClusterManager.addItem(mMyMarkerItem);
+        mClusterManager.cluster();
     }
 
     @Override
@@ -562,9 +601,9 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
     private void showTutorial(View view, View view2) {
         SpotlightSequence.getInstance(getActivity(),null)
                 .addSpotlight(view,
-                        "Real-Time Location", "Click to know the location of your kids ", "+++wq+sassss=q++")
+                        "Real-Time Location", "Click to know the location of your kids ", "+++wq+sasssss=q++")
                 .addSpotlight(view2,
-                        "History Route", "Click here to see the history route of your kids", "-s-saqwsssq=---")
+                        "History Route", "Click here to see the history route of your kids", "-s-sasqwsssq=---")
                 .startSequence();
     }
 }

@@ -216,9 +216,9 @@ public class AddZoneActivity extends AppCompatActivity implements OnMapReadyCall
     private void showTutorial(View view, View view2) {
         SpotlightSequence.getInstance(this,null)
                 .addSpotlight(view,
-                        "Center of The Area", "Long Click to drag the center of the area.", "1eqsasswwssssq")
+                        "Center of The Area", "Long Click to drag the center of the area.", "1eqsasswwsssssq")
                 .addSpotlight(view2,
-                        "Radius of The Area", "Long Click to adjust the radius of the area", "1qwdassssssssa")
+                        "Radius of The Area", "Long Click to adjust the radius of the area", "1qwdasssssssssa")
                 .startSequence();
     }
 
@@ -278,6 +278,7 @@ public class AddZoneActivity extends AppCompatActivity implements OnMapReadyCall
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+        mMap.getUiSettings().setMapToolbarEnabled(false);
         mMap.setOnMarkerDragListener(this);
         Intent intent = getIntent();
         Zone zone = intent.getParcelableExtra("zone");

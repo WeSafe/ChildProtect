@@ -47,17 +47,21 @@ public class GetLocationTask extends AsyncTask<String, Void, Location> {
         int i = 0;
         if (Looper.myLooper() == null)
             Looper.prepare();
-        while (latitude == 0 && i != 5) {
-            try {
-                //get the current location
-                getLocationInfo(context);
-            } catch (Exception e) {
-                e.printStackTrace();
-                //remove the location listener
-                locationManager.removeUpdates(myLocationListener);
-            }
-            i++;
-        }
+//        while (latitude == 0 && i != 5) {
+//            try {
+//                //get the current location
+//                getLocationInfo(context);
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//                //remove the location listener
+//                locationManager.removeUpdates(myLocationListener);
+//            }
+//            i++;
+//        }
+
+        lo =  new Location("");
+        lo.setLatitude(-37.8768);
+        lo.setLongitude(145.026);
         return lo;
     }
 
@@ -121,7 +125,12 @@ public class GetLocationTask extends AsyncTask<String, Void, Location> {
      */
     @Override
     protected void onPostExecute(Location location) {
-        removeListener();
+//        removeListener();
+//        if (location == null) {
+//            location = new Location("");
+//            location.setLatitude(-37.8768);
+//            location.setLongitude(145.026);
+//        }
         delegate.locationProcessFinish(location);
         latitude = 0;
     }
