@@ -88,10 +88,8 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
     private Handler mUiHandler = new Handler();
 
     private String mFamilyId;
-//    private Marker mMyMarker;
     private MarkerItem mMyMarkerItem;
     private Map<String, Child> mChildren;
-//    private Map<String, Marker> mChildMarkers;
     private Map<String, MarkerItem> mChildMarkerItems;
     private List<Circle> mZones;
     private List<Marker> mCenters;
@@ -200,11 +198,15 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
         double lng = 0;
 
         if (mClusterManager != null) {
-            for (MarkerItem markerItem: mChildMarkerItems.values())
-                mClusterManager.removeItem(markerItem);
+            for (Marker marker: mClusterManager.getMarkerCollection().getMarkers()) {
+                marker.remove();
+            }
 
-            if (mMyMarkerItem != null)
-                mClusterManager.removeItem(mMyMarkerItem);
+            for (Marker marker : mClusterManager.getClusterMarkerCollection().getMarkers()) {
+                marker.remove();
+            }
+
+            mClusterManager.clearItems();
         }
 
         if (mLines != null) {
@@ -226,10 +228,10 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
                         routeOption.add(camera);
                         Polyline polyline = mMap.addPolyline(routeOption);
                         mLines.add(polyline);
-                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(camera, 13));
+                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(camera, 19));
                     }
                 }, delay);
-                delay += 100;
+                delay += 800;
             }
             lat = l.getLat();
             lng = l.getLng();
@@ -305,18 +307,6 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
                         locationDatas.put(locationData.getDatetime().getTime()+"",locationData);
                         childLocations.put(mTodayTime + "", locationDatas);
                     }
-
-//                    if (mChildMarkers.containsKey(childId)) {
-//                        Marker childMarker = mChildMarkers.get(childId);
-//                        childMarker.remove();
-//                        Marker newMarker = mMap.addMarker(new MarkerOptions()
-//                                .position(new LatLng(locationData.getLat(),locationData.getLng()))
-//                                .title(child.getFirstName())
-//                                .snippet(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(locationData.getDatetime()))
-//                                .anchor(0.0f, 1.0f));
-//                        mChildMarkers.put(childId,newMarker);
-//                        newMarker.showInfoWindow();
-//                    }
 
                     if (mChildMarkerItems.containsKey(childId)) {
                         MarkerItem childMarker = mChildMarkerItems.get(childId);
@@ -567,12 +557,6 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
                 new LatLng(camera.getLatitude(), camera.getLongitude()), 13));
 
         LatLng myLatLng = new LatLng(mLocation.getLatitude(),mLocation.getLongitude());
-//        mMyMarker = mMap.addMarker(new MarkerOptions()
-//                .position(myLatLng)
-//                .title("My Location")
-//                .icon(BitmapDescriptorFactory.defaultMarker(
-//                        BitmapDescriptorFactory.HUE_AZURE))
-//                .anchor(0.0f, 1.0f));
         mMyMarkerItem = new MarkerItem(myLatLng, "My Location", "");
         mMyMarkerItem.setmIcon(BitmapDescriptorFactory.defaultMarker(
                         BitmapDescriptorFactory.HUE_AZURE));

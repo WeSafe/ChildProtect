@@ -50,4 +50,5 @@ public class MarkerItem implements ClusterItem {
     public void setmIcon(BitmapDescriptor mIcon) {
         this.mIcon = mIcon;
     }
+
 }
