@@ -22,6 +22,7 @@ import android.view.MenuItem;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.yinqinghao.childprotect.entity.Route;
 import com.example.yinqinghao.childprotect.fragment.MapsFragment;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -49,7 +50,6 @@ public class MainActivity extends AppCompatActivity
         setSupportActionBar(toolbar);
 
 
-
         drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -73,8 +73,6 @@ public class MainActivity extends AppCompatActivity
                     String name = sp.getString("name",null);
                     String email = sp.getString("email", null);
                     setUserInfo(email,name);
-
-                    int i = 0;
                 } else {
                     // User is signed out
                     Log.d(TAG, "onAuthStateChanged:signed_out");
@@ -88,7 +86,7 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        accountNavItem = navigationView.getMenu().getItem(2);
+        accountNavItem = navigationView.getMenu().getItem(3);
         //find the login views
         usernameTextView = (TextView) navigationView.getHeaderView(0).findViewById(R.id.txtUserName);
         emailTextView = (TextView) navigationView.getHeaderView(0).findViewById(R.id.txtUserEmail);
@@ -119,28 +117,6 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-//    @Override
-//    public boolean onCreateOptionsMenu(Menu menu) {
-//        // Inflate the menu; this adds items to the action bar if it is present.
-//        getMenuInflater().inflate(R.menu.main, menu);
-//        return true;
-//    }
-
-//    @Override
-//    public boolean onOptionsItemSelected(MenuItem item) {
-//        // Handle action bar item clicks here. The action bar will
-//        // automatically handle clicks on the Home/Up button, so long
-//        // as you specify a parent activity in AndroidManifest.xml.
-//        int id = item.getItemId();
-//
-//        //noinspection SimplifiableIfStatement
-//        if (id == R.id.action_settings) {
-//            return true;
-//        }
-//
-//        return super.onOptionsItemSelected(item);
-//    }
-
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
@@ -160,6 +136,12 @@ public class MainActivity extends AppCompatActivity
             case R.id.nav_zones:
                 Intent intent = new Intent(this, ZonesActivity.class);
                 startActivityForResult(intent, ZONE_ACTIVITY);
+                drawer.closeDrawer(GravityCompat.START);
+                return true;
+            case R.id.nav_routes:
+                Intent intentRoute = new Intent(this, RoutesActivity.class);
+//                startActivityForResult(intentRoute, ZONE_ACTIVITY);
+                startActivity(intentRoute);
                 drawer.closeDrawer(GravityCompat.START);
                 return true;
             case R.id.nav_logout:
@@ -197,8 +179,7 @@ public class MainActivity extends AppCompatActivity
         //if the result is ok
         if (requestCode == 1) {
             if (resultCode == RESULT_OK) {
-                if (mMapFragment == null)
-                    mMapFragment = new MapsFragment();
+                mMapFragment = new MapsFragment();
                 Fragment home = mMapFragment;
                 FragmentManager fragmentManager = getFragmentManager();
                 fragmentManager.beginTransaction().replace(R.id.content_frame, home).commit();
@@ -209,7 +190,7 @@ public class MainActivity extends AppCompatActivity
                 String lname = data.getStringExtra("lastName");
                 SharedPreferences sp = getSharedPreferences("ID", Context.MODE_PRIVATE);
                 SharedPreferences.Editor eLogin= sp.edit();
-                name = fname + " " + lname;
+                name = fname + " " +lname;
                 eLogin.putString("name", name);
                 eLogin.putString("email", email);
                 eLogin.apply();

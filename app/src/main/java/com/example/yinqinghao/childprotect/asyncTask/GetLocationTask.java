@@ -29,7 +29,6 @@ public class GetLocationTask extends AsyncTask<String, Void, Location> {
     private static Location lo;
     private static double longitude;
     private static double latitude;
-    private Activity activity;
     private static int loopTimes;
     //location listerer
     private static MyLocationListener myLocationListener;
@@ -37,7 +36,13 @@ public class GetLocationTask extends AsyncTask<String, Void, Location> {
     public GetLocationTask(GetLocationTask.LocationResponse delegate, Activity activity, int loopTimes) {
         this.delegate = delegate;
         this.context = activity;
-        this.activity = activity;
+        this.loopTimes = loopTimes;
+        myLocationListener = new MyLocationListener();
+    }
+
+    public GetLocationTask(GetLocationTask.LocationResponse delegate, Context context, int loopTimes) {
+        this.delegate = delegate;
+        this.context = context;
         this.loopTimes = loopTimes;
         myLocationListener = new MyLocationListener();
     }

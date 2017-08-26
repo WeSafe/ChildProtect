@@ -11,17 +11,17 @@ public class Family {
     private String id;
     private Date createDate;
     private List<Parent> parents;
-    private List<Child> children;
+    private List<Person> persons;
     private List<Zone> zones;
 
     public Family() {
     }
 
-    public Family(String id, Date createDate, List<Parent> parents, List<Child> children, List<Zone> zones) {
+    public Family(String id, Date createDate, List<Parent> parents, List<Person> persons, List<Zone> zones) {
         this.id = id;
         this.createDate = createDate;
         this.parents = parents;
-        this.children = children;
+        this.persons = persons;
         this.zones = zones;
     }
 
@@ -49,12 +49,12 @@ public class Family {
         this.parents = parents;
     }
 
-    public List<Child> getChildren() {
-        return children;
+    public List<Person> getPersons() {
+        return persons;
     }
 
-    public void setChildren(List<Child> children) {
-        this.children = children;
+    public void setPersons(List<Person> persons) {
+        this.persons = persons;
     }
 
     public List<Zone> getZones() {

@@ -4,56 +4,44 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import java.text.SimpleDateFormat;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.SortedSet;
 import java.util.TreeMap;
 
 /**
  * Created by yinqinghao on 12/8/17.
  */
 
-public class Child extends User {
+public class Person extends User {
     private String status;
     private Map<String,Map<String, LocationData>> locationDatas;
-//    private boolean isStop;
 
-//    public Child(String uid, String email, String firstName, String lastName, long phoneNumber, boolean isOnline, String status, Map<String, List<LocationData>> locationDatas, boolean isStop) {
-//        super(uid, email, firstName, lastName, phoneNumber, isOnline);
-//        this.status = status;
-//        this.locationDatas = locationDatas;
-//        this.isStop = isStop;
-//    }
-
-
-    public Child(String uid, String email, String firstName, String lastName, long phoneNumber, boolean isOnline, String status, Map<String, Map<String, LocationData>> locationDatas) {
+    public Person(String uid, String email, String firstName, String lastName, long phoneNumber, boolean isOnline, String status, Map<String, Map<String, LocationData>> locationDatas) {
         super(uid, email, firstName, lastName, phoneNumber, isOnline);
         this.status = status;
         this.locationDatas = locationDatas;
     }
 
-    public Child() {
+    public Person() {
     }
 
-    public Child(Parcel in) {
+    public Person(Parcel in) {
         super(in);
         status = in.readString();
     }
 
-    public static final Parcelable.Creator<Child> CREATOR = new Parcelable.Creator<Child> (){
+    public static final Parcelable.Creator<Person> CREATOR = new Parcelable.Creator<Person> (){
 
         @Override
-        public Child createFromParcel(Parcel source) {
-            return new Child(source);
+        public Person createFromParcel(Parcel source) {
+            return new Person(source);
         }
 
         @Override
-        public Child[] newArray(int size) {
-            return new Child[size];
+        public Person[] newArray(int size) {
+            return new Person[size];
         }
     };
 

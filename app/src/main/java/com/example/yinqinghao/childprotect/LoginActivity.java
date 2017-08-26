@@ -39,6 +39,7 @@ import android.widget.Toast;
 import com.dd.processbutton.FlatButton;
 import com.dd.processbutton.iml.ActionProcessButton;
 import com.example.yinqinghao.childprotect.entity.Parent;
+import com.example.yinqinghao.childprotect.entity.Person;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
@@ -207,13 +208,14 @@ public class LoginActivity extends AppCompatActivity {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
                     //get parent info
-                    Parent parent = dataSnapshot.getValue(Parent.class);
+                    Person parent = dataSnapshot.getValue(Person.class);
                     Intent returnIntent = getIntent();
+//                    Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                     returnIntent.putExtra("email", parent.getEmail());
                     returnIntent.putExtra("firstName", parent.getFirstName());
                     returnIntent.putExtra("lastName", parent.getLastName());
-                    setResult(Activity.RESULT_OK, returnIntent);
                     showProgress(false);
+                    setResult(Activity.RESULT_OK, returnIntent);
                     finish();
                 }
             }
@@ -236,7 +238,6 @@ public class LoginActivity extends AppCompatActivity {
 
                 DatabaseReference refParent = mDb.getReference("family")
                         .child(familyId)
-                        .child("parent")
                         .child(uid);
                 refParent.addListenerForSingleValueEvent(mParentListener);
                 refParent.child("notificationTokens").removeValue();

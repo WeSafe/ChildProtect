@@ -76,4 +76,26 @@
         app:fab_colorPressed="@color/buttonColorDark"
         android:src="@drawable/ic_my_location_24dp" />
 
+    <com.github.clans.fab.FloatingActionButton
+        android:id="@+id/fab_upload"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|left"
+        android:layout_marginBottom="8dp"
+        android:layout_marginLeft="8dp"
+        app:fab_colorNormal="@color/buttonColor"
+        app:fab_colorPressed="@color/buttonColorDark"
+        android:src="@drawable/ic_cloud_upload_24dp" />
+
+    <com.github.clans.fab.FloatingActionButton
+        android:id="@+id/fab_stop"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|left"
+        android:layout_marginBottom="8dp"
+        android:layout_marginLeft="8dp"
+        app:fab_colorNormal="@color/buttonColor"
+        app:fab_colorPressed="@color/buttonColorDark"
+        android:src="@drawable/ic_pause_24dp" />
+
 </android.support.design.widget.CoordinatorLayout>

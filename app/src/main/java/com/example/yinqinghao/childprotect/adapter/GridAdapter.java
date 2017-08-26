@@ -9,6 +9,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.yinqinghao.childprotect.R;
+import com.example.yinqinghao.childprotect.entity.Route;
 import com.example.yinqinghao.childprotect.entity.Zone;
 
 import java.util.ArrayList;
@@ -22,10 +23,18 @@ import java.util.Map;
 public class GridAdapter extends BaseAdapter {
     private Context mContext;
     private List<Zone> mZones;
+    private List<Route> mRoutes;
+    private boolean isRoute = false;
 
     public GridAdapter(Context mContext, List<Zone> mZones) {
         this.mContext = mContext;
         this.mZones = mZones;
+    }
+
+    public GridAdapter(Context mContext, List<Route> mRoutes, boolean isRoute) {
+        this.mContext = mContext;
+        this.mRoutes = mRoutes;
+        this.isRoute = true;
     }
 
     @Override
@@ -53,9 +62,14 @@ public class GridAdapter extends BaseAdapter {
             grid = inflater.inflate(R.layout.grid_single, null);
             TextView textView = (TextView) grid.findViewById(R.id.grid_text);
             ImageView imageView = (ImageView)grid.findViewById(R.id.grid_image);
-            Zone zone = mZones.get(position);
-            textView.setText(zone.getDes());
-            imageView.setImageResource(zone.getStatus().equals("safe") ? R.drawable.sz : R.drawable.da);
+            if (isRoute) {
+                Route route = mRoutes.get(position);
+                textView.setText(route.getDes());
+            } else {
+                Zone zone = mZones.get(position);
+                textView.setText(zone.getDes());
+                imageView.setImageResource(zone.getStatus().equals("safe") ? R.drawable.sz : R.drawable.da);
+            }
         } else {
             grid = (View) convertView;
         }

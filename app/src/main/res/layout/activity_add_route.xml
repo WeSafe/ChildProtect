@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:weightSum="100"
+    android:orientation="vertical"
+    android:clickable="true"
+    android:focusableInTouchMode="true"
+    tools:context="com.example.yinqinghao.childprotect.AddRouteActivity">
+
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="0dp"
+        android:layout_weight="66">
+
+        <com.google.android.gms.maps.MapView
+            android:id="@+id/map_add_route"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="66"></com.google.android.gms.maps.MapView>
+
+    </RelativeLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_weight="33"
+        android:layout_height="0dp"
+        android:layout_margin="10dp"
+        android:layout_gravity="center"
+        android:layout_marginTop="20dp"
+        android:orientation="vertical">
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:layout_gravity="center">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/Base.TextAppearance.AppCompat.Body1"
+                android:textSize="15dp"
+                android:textStyle="bold"
+                android:text="Route Description:"/>
+
+            <EditText
+                android:id="@+id/txt_route_des"
+                android:layout_width="200dp"
+                android:layout_marginLeft="20dp"
+                android:maxLines="1"
+                android:minLines="1"
+                android:lines="1"
+                android:imeActionId="@+id/next"
+                android:layout_height="match_parent"
+                android:imeActionLabel="Next"
+                android:singleLine="true"
+                android:imeOptions="actionDone"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:weightSum="100"
+            android:layout_marginTop="10dp">
+            <com.dd.processbutton.FlatButton
+                android:id="@+id/btn_add_wp"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="45"
+                android:text="add way point"
+                android:textColor="@android:color/white"
+                app:pb_colorNormal="@color/colorPrimary"
+                app:pb_colorPressed="@color/colorPrimaryDark"/>
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="10">
+
+            </View>
+
+            <com.dd.processbutton.FlatButton
+                android:id="@+id/btn_get_route"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="45"
+                android:text="get route"
+                android:textColor="@android:color/white"
+                app:pb_colorNormal="@color/colorPrimary"
+                app:pb_colorPressed="@color/colorPrimaryDark"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="15dp"
+            android:weightSum="100">
+
+            <com.dd.processbutton.FlatButton
+                android:id="@+id/btn_confirm_route"
+                android:layout_width="0dp"
+                android:layout_weight="100"
+                android:layout_height="40dp"
+                android:text="Confirm"
+                android:textColor="@android:color/white"
+                app:pb_colorNormal="@color/buttonColor"
+                app:pb_colorPressed="@color/buttonColorDark" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>
