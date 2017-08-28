@@ -7,9 +7,30 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Looper;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.v4.app.FragmentActivity;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.Api;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.PendingResult;
+import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+
+import java.io.FileDescriptor;
+import java.io.PrintWriter;
 import java.util.Calendar;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by yinqinghao on 1/5/17.
@@ -17,6 +38,7 @@ import java.util.Calendar;
  * Get the current location
  */
 public class GetLocationTask extends AsyncTask<String, Void, Location> {
+
     //call back method
     public interface LocationResponse {
         void locationProcessFinish(Location location);
@@ -32,6 +54,10 @@ public class GetLocationTask extends AsyncTask<String, Void, Location> {
     private static int loopTimes;
     //location listerer
     private static MyLocationListener myLocationListener;
+    private FusedLocationProviderClient mFusedLocationClient;
+    private LocationRequest mLocationRequest;
+    private LocationCallback mLocationCallBack;
+    private GoogleApiClient mGoogleApiClient;
 
     public GetLocationTask(GetLocationTask.LocationResponse delegate, Activity activity, int loopTimes) {
         this.delegate = delegate;
@@ -52,6 +78,7 @@ public class GetLocationTask extends AsyncTask<String, Void, Location> {
         int i = 0;
         if (Looper.myLooper() == null)
             Looper.prepare();
+
 //        while (latitude == 0 && i != 5) {
 //            try {
 //                //get the current location
@@ -63,7 +90,6 @@ public class GetLocationTask extends AsyncTask<String, Void, Location> {
 //            }
 //            i++;
 //        }
-
         lo =  new Location("");
         lo.setLatitude(-37.8768);
         lo.setLongitude(145.026);
@@ -168,4 +194,5 @@ public class GetLocationTask extends AsyncTask<String, Void, Location> {
 
         }
     }
+
 }

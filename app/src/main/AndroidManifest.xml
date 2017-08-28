@@ -78,7 +78,11 @@
             android:parentActivityName=".RoutesActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".RoutesActivity"></meta-data></activity>
+                android:value=".RoutesActivity" />
+        </activity>
+        <activity
+            android:name=".RouteGeoActivity"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>
 
 </manifest>

@@ -12,4 +12,5 @@
     <color name="dangerFillColor">#33ef9a9a</color>
     <color name="buttonColor">#d32f2f</color>
     <color name="buttonColorDark">#9a0007</color>
+    <color name="backgroundColor">#99000000</color>
 </resources>

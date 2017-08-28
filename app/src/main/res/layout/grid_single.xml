@@ -8,7 +8,7 @@
         android:layout_width="50dp"
         android:layout_height="50dp"
         android:layout_gravity="center"
-        android:src="@drawable/ic_pan_tool_24dp">
+        android:src="@drawable/ic_line_24dp">
     </ImageView>
 
     <TextView

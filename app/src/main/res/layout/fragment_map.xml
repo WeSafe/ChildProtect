@@ -15,17 +15,15 @@
         tools:context=".MapsActivity"
         android:name="com.google.android.gms.maps.SupportMapFragment" />
 
-    <!--<com.github.clans.fab.FloatingActionButton-->
-        <!--android:id="@+id/fab_history"-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:layout_gravity="bottom|right"-->
-        <!--android:layout_marginBottom="8dp"-->
-        <!--android:layout_marginRight="8dp"-->
-        <!--android:src="@drawable/ic_menu_camera"-->
-        <!--fab_colorNormal="@color/colorPrimary"-->
-        <!--fab_colorPressed="@color/colorPrimaryDark"-->
-        <!--fab_colorRipple="@color/colorAccent"/>-->
+    <TextView
+        android:id="@+id/txt_date"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="text"
+        android:gravity="center"
+        android:background="@color/backgroundColor"
+        android:textColor="@android:color/white"
+        android:visibility="gone" />
 
     <RelativeLayout
         android:layout_width="fill_parent"

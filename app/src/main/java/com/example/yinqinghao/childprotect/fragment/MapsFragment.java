@@ -8,15 +8,18 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.aigestudio.wheelpicker.WheelPicker;
+import com.example.yinqinghao.childprotect.Manifest;
 import com.example.yinqinghao.childprotect.asyncTask.GetLocationTask;
 import com.example.yinqinghao.childprotect.R;
 import com.example.yinqinghao.childprotect.clusterMarker.MarkerRender;
@@ -27,6 +30,7 @@ import com.example.yinqinghao.childprotect.entity.Zone;
 import com.example.yinqinghao.childprotect.service.LocationService;
 import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
@@ -76,6 +80,7 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
     private FloatingActionButton mButtenRealTime;
     private FloatingActionButton mButtonUploadLocation;
     private FloatingActionButton mButtonPause;
+    private TextView mTextDate;
     private View mHisTutor;
 
     private FirebaseAuth mAuth;
@@ -123,6 +128,7 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
             mButtonUploadLocation = (FloatingActionButton) mView.findViewById(R.id.fab_upload);
             mButtonPause = (FloatingActionButton) mView.findViewById(R.id.fab_stop);
             mHisTutor = mView.findViewById(R.id.historyTutor);
+            mTextDate = (TextView) mView.findViewById(R.id.txt_date);
             mMenuHistory.hideMenuButton(false);
             mButtenRealTime.hide(false);
             mButtonUploadLocation.hide(false);
@@ -178,6 +184,7 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
                     Log.e(TAG,ex.getMessage());
                 }
                 drawRoute(locationMap.get(key));
+                showDate(strDate);
                 d.dismiss();
             }
         });
@@ -189,6 +196,11 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
             }
         });
         d.show();
+    }
+
+    private void showDate(String date) {
+        mTextDate.setText(date);
+        mTextDate.setVisibility(View.VISIBLE);
     }
 
     private void drawRoute(Map<String, LocationData> locationDatas) {
@@ -265,6 +277,7 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
             public void onClick(View v) {
                 mMap.clear();
                 mClusterManager.clearItems();
+                mTextDate.setVisibility(View.GONE);
                 markMyLocation();
                 getChildLocation();
             }
@@ -553,7 +566,6 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         mMap.getUiSettings().setMapToolbarEnabled(false);
-
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(-37.8668, 145.016), 13));
         setUpClusterer();
         getChildLocation();

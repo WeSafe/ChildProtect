@@ -33,8 +33,8 @@ public class RoutesActivity extends AppCompatActivity {
     private GridView mRoutesGrid;
     private FloatingActionButton mAddBtn;
     private Intent mIntent;
-    private static final int ADD_NEW_Route = 432;
-    private static final int Edit_Route = 234;
+    private static final int ADD_NEW_Route = 4321;
+    private static final int Edit_Route = 1234;
 
     private FirebaseDatabase mDb;
 
@@ -71,7 +71,7 @@ public class RoutesActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Route route = mRoutes.get(position);
-                Intent intent = new Intent(RoutesActivity.this, AddZoneActivity.class);
+                Intent intent = new Intent(RoutesActivity.this, AddRouteActivity.class);
                 intent.putExtra("route", route);
                 startActivityForResult(intent, Edit_Route);
             }
@@ -88,10 +88,10 @@ public class RoutesActivity extends AppCompatActivity {
                             @Override
                             public void onClick(@NonNull SimpleDialog dialog, @NonNull SimpleDialog.BtnAction which) {
                                 showProgress();
-                                DatabaseReference refZone = mDb.getReference("zone")
+                                DatabaseReference refRoute = mDb.getReference("route")
                                         .child(mFamilyId)
                                         .child(route.getId());
-                                refZone.removeValue().addOnCompleteListener(new OnCompleteListener<Void>() {
+                                refRoute.removeValue().addOnCompleteListener(new OnCompleteListener<Void>() {
                                     @Override
                                     public void onComplete(@NonNull Task<Void> task) {
                                         if (task.isSuccessful()) {

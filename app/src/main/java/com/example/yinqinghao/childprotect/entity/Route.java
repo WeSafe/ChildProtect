@@ -3,6 +3,8 @@ package com.example.yinqinghao.childprotect.entity;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.google.android.gms.maps.model.LatLng;
+
 import java.util.Date;
 
 /**
@@ -14,15 +16,23 @@ public class Route implements Parcelable {
     private String des;
     private String points;
     private String id;
+    private int distance;
+    private int duration;
+    private String mode;
+    private String latlngs;
 
     public Route() {
     }
 
-    public Route(Date createDate, String des, String points, String id) {
+    public Route(Date createDate, String des, String points, String id, int distance, int duration, String mode, String latlngs) {
         this.createDate = createDate;
         this.des = des;
         this.points = points;
         this.id = id;
+        this.distance = distance;
+        this.duration = duration;
+        this.mode = mode;
+        this.latlngs = latlngs;
     }
 
     public Route(Parcel in) {
@@ -30,6 +40,10 @@ public class Route implements Parcelable {
         des = in.readString();
         points = in.readString();
         id = in.readString();
+        distance = in.readInt();
+        duration = in.readInt();
+        mode = in.readString();
+        latlngs = in.readString();
     }
 
     public static final Parcelable.Creator<Route> CREATOR = new Parcelable.Creator<Route>() {
@@ -50,6 +64,10 @@ public class Route implements Parcelable {
         dest.writeString(des);
         dest.writeString(points);
         dest.writeString(id);
+        dest.writeInt(distance);
+        dest.writeInt(duration);
+        dest.writeString(mode);
+        dest.writeString(latlngs);
     }
 
     public Date getCreateDate() {
@@ -82,6 +100,38 @@ public class Route implements Parcelable {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public int getDistance() {
+        return distance;
+    }
+
+    public void setDistance(int distance) {
+        this.distance = distance;
+    }
+
+    public int getDuration() {
+        return duration;
+    }
+
+    public void setDuration(int duration) {
+        this.duration = duration;
+    }
+
+    public String getMode() {
+        return mode;
+    }
+
+    public void setMode(String mode) {
+        this.mode = mode;
+    }
+
+    public String getLatlngs() {
+        return latlngs;
+    }
+
+    public void setLatlngs(String latlngs) {
+        this.latlngs = latlngs;
     }
 
     @Override

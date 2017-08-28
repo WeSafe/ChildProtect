@@ -39,6 +39,9 @@ public class GridAdapter extends BaseAdapter {
 
     @Override
     public int getCount() {
+        if (isRoute) {
+            return mRoutes.size();
+        }
         return mZones.size();
     }
 

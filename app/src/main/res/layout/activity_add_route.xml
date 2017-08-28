@@ -13,7 +13,7 @@
     <RelativeLayout
         android:layout_width="fill_parent"
         android:layout_height="0dp"
-        android:layout_weight="66">
+        android:layout_weight="60">
 
         <com.google.android.gms.maps.MapView
             android:id="@+id/map_add_route"
@@ -21,11 +21,20 @@
             android:layout_height="match_parent"
             android:layout_weight="66"></com.google.android.gms.maps.MapView>
 
+        <TextView
+            android:id="@+id/txt_dd"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/backgroundColor"
+            android:textColor="@android:color/white"
+            android:visibility="gone"
+            android:text="text"/>
+
     </RelativeLayout>
 
     <LinearLayout
         android:layout_width="wrap_content"
-        android:layout_weight="33"
+        android:layout_weight="40"
         android:layout_height="0dp"
         android:layout_margin="10dp"
         android:layout_gravity="center"
@@ -33,7 +42,7 @@
         android:orientation="vertical">
         <LinearLayout
             android:layout_width="wrap_content"
-            android:layout_height="50dp"
+            android:layout_height="40dp"
             android:layout_gravity="center">
             <TextView
                 android:layout_width="wrap_content"
@@ -58,10 +67,71 @@
         </LinearLayout>
 
         <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="15dp">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/Base.TextAppearance.AppCompat.Body1"
+                android:textSize="15dp"
+                android:textStyle="bold"
+                android:layout_gravity="center"
+                android:text="Mode:"/>
+
+            <RadioGroup
+                android:id="@+id/radioGroup_route"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checkedButton="@+id/rb_driving"
+                android:layout_marginLeft="10dp"
+                android:orientation="horizontal">
+
+                <RadioButton
+                    android:id="@+id/rb_driving"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:buttonTint="@color/colorPrimary"
+                    android:textSize="12dp"
+                    android:textStyle="bold"
+                    android:text="Driving" />
+
+                <RadioButton
+                    android:id="@+id/rb_walking"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:buttonTint="@color/colorPrimary"
+                    android:textSize="12dp"
+                    android:textStyle="bold"
+                    android:text="Walking" />
+
+                <RadioButton
+                    android:id="@+id/rb_bicycling"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:buttonTint="@color/colorPrimary"
+                    android:textSize="12dp"
+                    android:textStyle="bold"
+                    android:text="Bicycling" />
+
+                <RadioButton
+                    android:id="@+id/rb_transit"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:buttonTint="@color/colorPrimary"
+                    android:textSize="12dp"
+                    android:textStyle="bold"
+                    android:text="Transit" />
+
+
+            </RadioGroup>
+        </LinearLayout>
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:weightSum="100"
-            android:layout_marginTop="10dp">
+            android:layout_marginTop="15dp">
             <com.dd.processbutton.FlatButton
                 android:id="@+id/btn_add_wp"
                 android:layout_width="0dp"
