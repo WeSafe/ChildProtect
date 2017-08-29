@@ -24,7 +24,10 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,7 +40,9 @@ public class ZonesActivity extends AppCompatActivity {
 
     private FirebaseDatabase mDb;
 
-    private String mFamilyId;
+//    private String mFamilyId;
+    private String mCurrentGid;
+    private List<String> mGids;
     private List<Zone> mZones;
     private AdapterView.OnItemClickListener mGridClickListener;
     private AdapterView.OnItemLongClickListener mGridLongClickListener;
@@ -49,8 +54,12 @@ public class ZonesActivity extends AppCompatActivity {
         setContentView(R.layout.activity_zones);
 
         SharedPreferences sp = getSharedPreferences("ID", Context.MODE_PRIVATE);
-        mFamilyId = sp.getString("familyId",null);
+        mCurrentGid = sp.getString("currentGid",null);
+//        String str = sp.getString("groupIds", null);
+//        Type listType = new TypeToken<List<String>>(){}.getType();
+//        mGids = new Gson().fromJson(str, listType);
         mDb = FirebaseDatabase.getInstance();
+
 
         mZonesGrid = (GridView) findViewById(R.id.gridview);
         mAddBtn = (FloatingActionButton) findViewById(R.id.fab_add_zone);
@@ -88,7 +97,7 @@ public class ZonesActivity extends AppCompatActivity {
                             public void onClick(@NonNull SimpleDialog dialog, @NonNull SimpleDialog.BtnAction which) {
                                 showProgress();
                                 DatabaseReference refZone = mDb.getReference("zone")
-                                        .child(mFamilyId)
+                                        .child(mCurrentGid)
                                         .child(zone.getId());
                                 refZone.removeValue().addOnCompleteListener(new OnCompleteListener<Void>() {
                                     @Override
@@ -124,7 +133,7 @@ public class ZonesActivity extends AppCompatActivity {
     private void getData(){
         mZones = new ArrayList<>();
         DatabaseReference refZone = mDb.getReference("zone")
-                .child(mFamilyId);
+                .child(mCurrentGid);
         refZone.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {

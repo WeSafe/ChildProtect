@@ -51,6 +51,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.gson.Gson;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -227,21 +228,33 @@ public class LoginActivity extends AppCompatActivity {
         mFidListener = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                String familyId = ((HashMap<String, String >)dataSnapshot.getValue()).get("familyId");
+                List<String> groupIds = new ArrayList<>();
+                String token = FirebaseInstanceId.getInstance().getToken();
+                if (dataSnapshot.exists()) {
+                    for (DataSnapshot ds : dataSnapshot.getChildren()) {
+                        String fid = ds.getKey().toString();
+                        groupIds.add(fid);
+                        DatabaseReference refToken = mDb.getReference("group")
+                                .child(fid)
+                                .child("users")
+                                .child(mAuth.getCurrentUser().getUid());
+                        refToken.setValue(token);
+                    }
+                }
+                String groupIdsStr = new Gson().toJson(groupIds);
+//                String familyId = ((HashMap<String, String >)dataSnapshot.getValue()).get("familyId");
                 SharedPreferences sp = getSharedPreferences("ID", Context.MODE_PRIVATE);
                 SharedPreferences.Editor eLogin= sp.edit();
-                eLogin.putString("familyId", familyId);
-                eLogin.putString("parentId", mAuth.getCurrentUser().getUid());
+                eLogin.putString("groupIds", groupIdsStr);
+                eLogin.putString("uid", mAuth.getCurrentUser().getUid());
                 eLogin.apply();
-                String token = FirebaseInstanceId.getInstance().getToken();
 
 
-                DatabaseReference refParent = mDb.getReference("family")
-                        .child(familyId)
+                DatabaseReference refUserInfo = mDb.getReference("userInfo")
                         .child(uid);
-                refParent.addListenerForSingleValueEvent(mParentListener);
-                refParent.child("notificationTokens").removeValue();
-                refParent.child("notificationTokens").child(token).setValue(true);
+                refUserInfo.addListenerForSingleValueEvent(mParentListener);
+//                refUserInfo.child("notificationTokens").removeValue();
+//                refUserInfo.child("notificationTokens").child(token).setValue(true);
             }
 
             @Override
@@ -250,26 +263,6 @@ public class LoginActivity extends AppCompatActivity {
             }
         };
     }
-
-//    private void createNewUser(String email, String pwd, String name) {
-//        showProgress(true);
-//        mAuth.createUserWithEmailAndPassword(email,pwd).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
-//            @Override
-//            public void onComplete(@NonNull Task<AuthResult> task) {
-//                Log.d(TAG, "createUserWithEmail:onComplete:" + task.isSuccessful());
-//
-//                if (!task.isSuccessful()) {
-//                    Toast.makeText(LoginActivity.this, task.getException().getMessage(),
-//                            Toast.LENGTH_SHORT).show();
-//                    showProgress(false);
-//                } else {
-//                    FirebaseUser user = mAuth.getCurrentUser();
-//                    final String email = user.getEmail();
-//                    final String uid = user.getUid();
-//                }qwes
-//            }
-//        });
-//    }
 
     private boolean isEmailValid(String email) {
         String ePattern = "^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\])|(([a-zA-Z\\-0-9]+\\.)+[a-zA-Z]{2,}))$";

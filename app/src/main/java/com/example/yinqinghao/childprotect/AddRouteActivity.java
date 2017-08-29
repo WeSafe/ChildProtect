@@ -204,7 +204,7 @@ public class AddRouteActivity extends AppCompatActivity implements OnMapReadyCal
                 }
 
                 SharedPreferences sp = getSharedPreferences("ID", Context.MODE_PRIVATE);
-                final String familyId = sp.getString("familyId",null);
+                final String familyId = sp.getString("currentGid",null);
                 DatabaseReference refRoute = mDb.getReference("route")
                         .child(familyId);
                 String des = mDesEditText.getText().toString().trim();
@@ -259,7 +259,7 @@ public class AddRouteActivity extends AppCompatActivity implements OnMapReadyCal
             Type listType = new TypeToken<List<LatLng>>(){}.getType();
             List<LatLng> ll = new Gson().fromJson(latlngs, listType);
             double dis = route.getDistance();
-            int dur = route.getDuration();
+            long dur = route.getDuration();
 
             mDesEditText.setText(des);
             int id = 0;
@@ -318,7 +318,7 @@ public class AddRouteActivity extends AppCompatActivity implements OnMapReadyCal
                 }
             case R.id.action_start:
                 Intent intent = new Intent(this, RouteGeoActivity.class);
-                intent.putExtra("points", mRoute.getPoints());
+                intent.putExtra("route", mRoute);
                 startActivity(intent);
             default:
                 return super.onOptionsItemSelected(item);
@@ -415,8 +415,8 @@ public class AddRouteActivity extends AppCompatActivity implements OnMapReadyCal
             if (jsonObject.get("status").getAsString().equals("OK")) {
                 JsonObject routes = jsonObject.get("routes").getAsJsonArray().get(0).getAsJsonObject();
                 JsonArray legs = routes.get("legs").getAsJsonArray();
-                int dis = 0;
-                int dur = 0;
+                long dis = 0;
+                long dur = 0;
                 for (JsonElement element: legs) {
                     JsonObject leg = element.getAsJsonObject();
                     dis += leg.get("distance").getAsJsonObject().get("value").getAsInt();
@@ -437,7 +437,7 @@ public class AddRouteActivity extends AppCompatActivity implements OnMapReadyCal
 
     }
 
-    private void showDD(double distance, int duration) {
+    private void showDD(double distance, long duration) {
         String dis = "";
         if (distance < 1000) {
             dis = distance + "m";

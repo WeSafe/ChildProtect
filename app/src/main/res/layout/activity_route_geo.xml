@@ -1,23 +1,135 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:weightSum="100"
+    android:orientation="vertical"
     tools:context="com.example.yinqinghao.childprotect.RouteGeoActivity">
 
-    <com.google.android.gms.maps.MapView
-        android:id="@+id/map_routeGeo"
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="0dp"
+        android:layout_weight="100">
 
-    </com.google.android.gms.maps.MapView>
+        <com.google.android.gms.maps.MapView
+            android:id="@+id/map_routeGeo"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
 
-    <ImageView
-        android:id="@+id/btn_close"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
-        android:layout_gravity="right"
-        android:src="@drawable/ic_close_24dp"/>
+        </com.google.android.gms.maps.MapView>
 
-</android.support.design.widget.CoordinatorLayout>
+        <ImageView
+            android:id="@+id/btn_close"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:src="@drawable/ic_close_24dp"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true" />
+
+
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true">
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="5">
+
+                </View>
+
+                <TextView
+                    android:id="@+id/txt_time"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_above="@+id/linearLayout"
+                    android:layout_alignParentLeft="true"
+                    android:layout_alignParentStart="true"
+                    android:layout_weight="90"
+                    android:textSize="20dp"
+                    android:gravity="center"
+                    android:background="@color/backgroundColor"
+                    android:text="text"
+                    android:textColor="@android:color/white"
+                    android:visibility="visible" />
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="5">
+
+                </View>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_marginBottom="30dp"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:id="@+id/linearLayout">
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="5">
+
+                </View>
+
+                <RelativeLayout
+                    android:layout_width="0dp"
+                    android:layout_weight="90"
+                    android:layout_height="40dp">
+                    <com.dd.processbutton.FlatButton
+                        android:id="@+id/btn_route"
+                        android:layout_width="match_parent"
+                        android:layout_weight="90"
+                        android:layout_height="40dp"
+                        android:layout_gravity="center"
+                        android:text="Start Route Geo-Fencing"
+                        android:textColor="@android:color/white"
+                        app:pb_colorNormal="@color/buttonGreen"
+                        app:pb_colorPressed="@color/buttonGreenDark" />
+
+                    <com.dd.processbutton.FlatButton
+                        android:id="@+id/btn_route_stop"
+                        android:layout_width="match_parent"
+                        android:layout_weight="90"
+                        android:layout_height="40dp"
+                        android:layout_gravity="center"
+                        android:text="Stop"
+                        android:visibility="gone"
+                        android:textColor="@android:color/white"
+                        app:pb_colorNormal="@color/buttonColor"
+                        app:pb_colorPressed="@color/buttonColorDark" />
+                </RelativeLayout>
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="5">
+
+                </View>
+            </LinearLayout>
+        </LinearLayout>
+    </RelativeLayout>
+
+
+
+</LinearLayout>

@@ -17,11 +17,12 @@ public class Zone implements Parcelable{
     private long radius;
     private String status;
     private String id;
+    private String gid;
 
     public Zone() {
     }
 
-    public Zone(Date createDate, String des, double lat, double lng, long radius, String status, String id) {
+    public Zone(Date createDate, String des, double lat, double lng, long radius, String status, String id, String gid) {
         this.createDate = createDate;
         this.des = des;
         this.lat = lat;
@@ -29,6 +30,7 @@ public class Zone implements Parcelable{
         this.radius = radius;
         this.status = status;
         this.id = id;
+        this.gid = gid;
     }
 
     public Zone(Parcel in) {
@@ -39,6 +41,7 @@ public class Zone implements Parcelable{
         radius = in.readLong();
         status = in.readString();
         id = in.readString();
+        gid = in.readString();
     }
 
     public static final Parcelable.Creator<Zone> CREATOR = new Parcelable.Creator<Zone>() {
@@ -62,6 +65,7 @@ public class Zone implements Parcelable{
         dest.writeLong(radius);
         dest.writeString(status);
         dest.writeString(id);
+        dest.writeString(gid);
     }
 
     public Date getCreateDate() {
@@ -118,6 +122,14 @@ public class Zone implements Parcelable{
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getGid() {
+        return gid;
+    }
+
+    public void setGid(String gid) {
+        this.gid = gid;
     }
 
     @Override

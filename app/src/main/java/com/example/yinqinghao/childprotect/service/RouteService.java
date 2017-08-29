@@ -6,21 +6,26 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.IBinder;
+import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 
 import com.example.yinqinghao.childprotect.R;
 import com.example.yinqinghao.childprotect.receiver.LocationAlarmReceiver;
+import com.example.yinqinghao.childprotect.receiver.RouteAlarmReceiver;
 
-public class LocationService extends Service {
-    final static String TAG = "LocationService";
+/**
+ * Created by yinqinghao on 29/8/17.
+ */
+
+public class RouteService extends Service {
+
+    final static String TAG = "RouteService";
     private String mChildId;
     private String mFamilyId;
-    private LocationAlarmReceiver mAlarmReceiver;
+    private RouteAlarmReceiver mAlarmReceiver;
     private Notification notification;
 
-    public LocationService() {
-    }
-
+    @Nullable
     @Override
     public IBinder onBind(Intent intent) {
         return null;
@@ -30,7 +35,7 @@ public class LocationService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         NotificationCompat.Builder bBuilder = new NotificationCompat.Builder(
                 this).setSmallIcon(R.drawable.ic_android_black_24dp)
-                .setContentTitle("Uploading your location data")
+                .setContentTitle("Route Geofencing")
                 .setPriority(Notification.PRIORITY_MAX)
                 .setContentText("ChildProtect")
                 .setOngoing(true);
@@ -38,12 +43,12 @@ public class LocationService extends Service {
         notification.flags |= Notification.FLAG_FOREGROUND_SERVICE;
         notification.flags |= Notification.FLAG_NO_CLEAR;
         notification.flags |= Notification.FLAG_ONGOING_EVENT;
-        startForeground(12345, notification);
+        startForeground(23456, notification);
 
         SharedPreferences sp = getSharedPreferences("ID", Context.MODE_PRIVATE);
         mChildId = sp.getString("uid",null);
-        mFamilyId = sp.getString("groupIds", null);
-        mAlarmReceiver = new LocationAlarmReceiver();
+        mFamilyId = sp.getString("currentGid", null);
+        mAlarmReceiver = new RouteAlarmReceiver();
         mAlarmReceiver.setAlarm(this,mChildId,mFamilyId);
         return Service.START_STICKY;
     }

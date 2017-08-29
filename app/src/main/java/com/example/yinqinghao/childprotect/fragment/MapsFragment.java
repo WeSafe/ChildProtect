@@ -1,8 +1,12 @@
 package com.example.yinqinghao.childprotect.fragment;
 
 import android.app.Dialog;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
@@ -10,11 +14,15 @@ import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -23,9 +31,11 @@ import com.example.yinqinghao.childprotect.Manifest;
 import com.example.yinqinghao.childprotect.asyncTask.GetLocationTask;
 import com.example.yinqinghao.childprotect.R;
 import com.example.yinqinghao.childprotect.clusterMarker.MarkerRender;
+import com.example.yinqinghao.childprotect.entity.Group;
 import com.example.yinqinghao.childprotect.entity.Person;
 import com.example.yinqinghao.childprotect.entity.LocationData;
 import com.example.yinqinghao.childprotect.clusterMarker.MarkerItem;
+import com.example.yinqinghao.childprotect.entity.SharedData;
 import com.example.yinqinghao.childprotect.entity.Zone;
 import com.example.yinqinghao.childprotect.service.LocationService;
 import com.github.clans.fab.FloatingActionButton;
@@ -50,9 +60,12 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.google.maps.android.clustering.ClusterManager;
 import com.wooplr.spotlight.utils.SpotlightSequence;
 
+import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -62,6 +75,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 public class MapsFragment extends android.app.Fragment implements OnMapReadyCallback,
         GetLocationTask.LocationResponse {
@@ -83,17 +98,23 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
     private TextView mTextDate;
     private View mHisTutor;
 
-    private FirebaseAuth mAuth;
     private FirebaseDatabase mDb;
-    private ValueEventListener mFidValueListener;
-    private ValueEventListener mFriendValueListener;
+//    private ValueEventListener mFidValueListener;
+//    private ValueEventListener mFriendValueListener;
     private ValueEventListener mLocationDataValueListner;
     private ValueEventListener mZoneDataListener;
+    private ValueEventListener mFriendIdValueListener;
+    private ValueEventListener mGroupValueListener;
 
     private Handler mUiHandler = new Handler();
 
-    private String mFamilyId;
+    private List<String> mGroupIds;
+//    private List<Group> mGroups;
+    private List<String> mGroupNames;
+    private String mCurrentGid;
+    private Group mCurrentGroup;
     private Person mMe;
+    private String uid;
     private MarkerItem mMyMarkerItem;
     private Map<String, Person> mFriends;
     private Map<String, MarkerItem> mFriendMarkerItems;
@@ -138,12 +159,33 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
             mFriendMarkerItems = new HashMap<>();
             mZones = new ArrayList<>();
             mCenters = new ArrayList<>();
-            mFamilyId = "";
+//            mGroups = new ArrayList<>();
+            mGroupNames = new ArrayList<>();
 
+            getFamilyIds();
             initListener();
+            setSpinner();
         }
     }
 
+    private void setSpinner() {
+        for (String s : mGroupIds) {
+            DatabaseReference refGroups = mDb.getReference("group")
+                    .child(s);
+            refGroups.addListenerForSingleValueEvent(mGroupValueListener);
+        }
+    }
+
+    private void getFamilyIds() {
+        SharedPreferences sp = getActivity().getSharedPreferences("ID", Context.MODE_PRIVATE);
+        String groupIds = sp.getString("groupIds",null);
+        if (groupIds != null) {
+            Type listType = new TypeToken<List<String>>(){}.getType();
+            mGroupIds = new Gson().fromJson(groupIds, listType);
+            setmCurrentGid(mGroupIds.get(0));
+        }
+        uid = sp.getString("uid", null);
+    }
 
     private void showHistoryPicker(Person person) {
         final Dialog d = new Dialog(getActivity());
@@ -286,15 +328,12 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
         mButtonUploadLocation.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mFamilyId != null) {
-                    Intent intent = new Intent(getActivity(), LocationService.class);
-                    intent.putExtra("parentId", mMe.getUid());
-                    intent.putExtra("familyId", mFamilyId);
-                    getActivity().startService(intent);
-                    mButtonUploadLocation.hide(false);
-                    mButtonPause.show(false);
-                    Toast.makeText(getActivity(), "Uploading your location now.", Toast.LENGTH_SHORT).show();
-                }
+                Intent intent = new Intent(getActivity(), LocationService.class);
+                getActivity().startService(intent);
+                SharedData.setStartedService(true);
+                mButtonUploadLocation.hide(false);
+                mButtonPause.show(false);
+                Toast.makeText(getActivity(), "Uploading your location now.", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -303,6 +342,7 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
             public void onClick(View v) {
                 Intent i = new Intent(getActivity(), LocationService.class);
                 getActivity().stopService(i);
+                SharedData.setStartedService(false);
                 mButtonUploadLocation.show(false);
                 mButtonPause.hide(false);
                 Toast.makeText(getActivity(), "Stop uploading.", Toast.LENGTH_SHORT).show();
@@ -311,6 +351,8 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
 
         showFab();
     }
+
+
 
     private void showFab() {
         mUiHandler.postDelayed(new Runnable() {
@@ -336,9 +378,60 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
         }, 700);
     }
 
+    private void setmCurrentGid(String gid) {
+        mCurrentGid = gid;
+        SharedPreferences sp = getActivity().getSharedPreferences("ID", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sp.edit();
+        editor.putString("currentGid", mCurrentGid);
+        editor.apply();
+    }
+
     private void initListener() {
-        mAuth = FirebaseAuth.getInstance();
         mDb = FirebaseDatabase.getInstance();
+
+        mGroupValueListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    Group g = dataSnapshot.getValue(Group.class);
+//                    mGroups.add(g);
+                    mGroupNames.add(g.getName());
+                }
+
+                if (mGroupIds.size() == mGroupNames.size()) {
+                    Toolbar toolbar = (Toolbar) getActivity().findViewById(R.id.toolbar);
+                    Spinner spinner = new Spinner(getActivity());
+                    ArrayAdapter spinnerArrayAdapter = new ArrayAdapter(getActivity(),
+                            R.layout.spinner_item,
+                            mGroupNames);
+                    spinner.setAdapter(spinnerArrayAdapter);
+                    spinner.getBackground().setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_ATOP);
+                    spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                        @Override
+                        public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                            mMap.clear();
+                            mClusterManager.clearItems();
+                            markMyLocation();
+                            setmCurrentGid(mGroupIds.get(position));
+                            getChildLocation();
+                        }
+
+                        @Override
+                        public void onNothingSelected(AdapterView<?> parent) {
+
+                        }
+                    });
+                    toolbar.removeViewAt(1);
+                    toolbar.addView(spinner);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        };
+
         mLocationDataValueListner = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -380,49 +473,54 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
             }
         };
 
-        mFriendValueListener = new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists()) {
-                    DatabaseReference refChildren = mDb.getReference("family")
-                            .child(mFamilyId);
-                    String id = "";
-                    mFriends = new HashMap<>();
-                    for (DataSnapshot ds : dataSnapshot.getChildren()) {
-                        Person person = ds.getValue(Person.class);
-                        if (person.getUid().equals(mAuth.getCurrentUser().getUid())) {
-                            mMe = person;
-                            continue;
-                        }
-                        id = person.getUid();
-                        mFriends.put(id, person);
-                        addChildMarker(person);
-                        com.google.firebase.database.Query queryLocation = refChildren.child(id)
-                                .child("locationDatas").child(mTodayTime+"").orderByKey()
-                                .limitToLast(1);
-                        queryLocation.addValueEventListener(mLocationDataValueListner);
-                    }
-                    setmFab();
-
-                    if (mFriends.size() > 0) {
-                        if (mFriends.get(id).getMostRecentLocation() == null) return;
-                        LocationData locationData = mFriends.get(id).getMostRecentLocation();
-                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(
-                                new LatLng(locationData.getLat(), locationData.getLng()), 13));
-                    }
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Log.w(TAG, "loadChildren:onCancelled", databaseError.toException());
-            }
-        };
+//        mFriendValueListener = new ValueEventListener() {
+//            @Override
+//            public void onDataChange(DataSnapshot dataSnapshot) {
+//                if (dataSnapshot.exists()) {
+//                    DatabaseReference refFriends = mDb.getReference("family")
+//                            .child(mFamilyId);
+//                    String id = "";
+//                    mFriends = new HashMap<>();
+//                    for (DataSnapshot ds : dataSnapshot.getChildren()) {
+//                        Person person = ds.getValue(Person.class);
+//                        if (person.getUid().equals(mAuth.getCurrentUser().getUid())) {
+//                            mMe = person;
+//                            continue;
+//                        }
+//                        id = person.getUid();
+//                        mFriends.put(id, person);
+//                        addChildMarker(person);
+//                        com.google.firebase.database.Query queryLocation = refChildren.child(id)
+//                                .child("locationDatas").child(mTodayTime+"").orderByKey()
+//                                .limitToLast(1);
+//                        queryLocation.addValueEventListener(mLocationDataValueListner);
+//                    }
+//                    setmFab();
+//
+//                    if (mFriends.size() > 0) {
+//                        if (mFriends.get(id).getMostRecentLocation() == null) return;
+//                        LocationData locationData = mFriends.get(id).getMostRecentLocation();
+//                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(
+//                                new LatLng(locationData.getLat(), locationData.getLng()), 13));
+//                    }
+//                }
+//            }
+//
+//            @Override
+//            public void onCancelled(DatabaseError databaseError) {
+//                Log.w(TAG, "loadChildren:onCancelled", databaseError.toException());
+//            }
+//        };
 
         mZoneDataListener = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
+                    for (Circle c : mZones) {
+                        c.remove();
+                    }
+                    mCenters = new ArrayList<>();
+                    mZones = new ArrayList<>();
                     for (DataSnapshot ds : dataSnapshot.getChildren()) {
                         Zone zone = ds.getValue(Zone.class);
                         drawCircle(zone);
@@ -436,23 +534,82 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
             }
         };
 
-        mFidValueListener = new ValueEventListener() {
+        mFriendIdValueListener = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
-                    mFamilyId = dataSnapshot.getValue().toString();
-                    DatabaseReference refChildren = mDb.getReference("family")
-                            .child(mFamilyId);
-                    refChildren.addListenerForSingleValueEvent(mFriendValueListener);
-                    getZones();
+                    mCurrentGroup = dataSnapshot.getValue(Group.class);
+                    final List<String> userIds = new ArrayList<>(mCurrentGroup.getUsers().keySet());
+                    mFriends = new HashMap<>();
+                    for (String s : userIds) {
+                        final DatabaseReference refUid = mDb.getReference("userInfo").child(s);
+                        refUid.addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+                                String id = "";
+                                if (dataSnapshot.exists()) {
+                                    Person person = dataSnapshot.getValue(Person.class);
+                                    if (person.getUid().equals(uid)) {
+                                        mMe = person;
+                                        SharedData.addUser(mMe.getUid(), mMe);
+                                    } else {
+                                        id = person.getUid();
+                                        mFriends.put(id, person);
+                                        addChildMarker(person);
+                                        com.google.firebase.database.Query queryLocation = refUid
+                                                .child("locationDatas").child(mTodayTime + "").orderByKey()
+                                                .limitToLast(1);
+                                        queryLocation.addValueEventListener(mLocationDataValueListner);
+                                    }
+                                }
+                                setFab(userIds,id);
+                            }
+
+                            @Override
+                            public void onCancelled(DatabaseError databaseError) {
+
+                            }
+                        });
+                    }
                 }
             }
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                Log.w(TAG, "loadFamilyId:onCancelled", databaseError.toException());
+
             }
         };
+
+//        mFidValueListener = new ValueEventListener() {
+//            @Override
+//            public void onDataChange(DataSnapshot dataSnapshot) {
+//                if (dataSnapshot.exists()) {
+//                    mFamilyId = dataSnapshot.getValue().toString();
+//                    DatabaseReference refChildren = mDb.getReference("family")
+//                            .child(mFamilyId);
+//                    refChildren.addListenerForSingleValueEvent(mFriendValueListener);
+//                    getZones();
+//                }
+//            }
+//
+//            @Override
+//            public void onCancelled(DatabaseError databaseError) {
+//                Log.w(TAG, "loadFamilyId:onCancelled", databaseError.toException());
+//            }
+//        };
+    }
+
+    private void setFab(List<String> userIds, String id) {
+        if (mFriends.size() == userIds.size() -1 || userIds.size() == 1) {
+            setmFab();
+
+            if (mFriends.size() > 0) {
+                if (mFriends.get(id) == null || mFriends.get(id).getMostRecentLocation() == null) return;
+                LocationData locationData = mFriends.get(id).getMostRecentLocation();
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(
+                        new LatLng(locationData.getLat(), locationData.getLng()), 13));
+            }
+        }
     }
 
     private void drawCircle(Zone zone) {
@@ -484,20 +641,20 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
     }
 
     private void getChildLocation() {
-        String parentId = mAuth.getCurrentUser().getUid();
-        DatabaseReference refFID = mDb.getReference("user").child(parentId).child("familyId");
-        refFID.addListenerForSingleValueEvent(mFidValueListener);
+        DatabaseReference refFriendsID = mDb.getReference("group").child(mCurrentGid);
+        refFriendsID.addListenerForSingleValueEvent(mFriendIdValueListener);
+        getZones();
     }
 
     private void getZones() {
         DatabaseReference refZone = mDb.getReference("zone")
-                .child(mFamilyId);
-        refZone.addListenerForSingleValueEvent(mZoneDataListener);
+                .child(mCurrentGid);
+        refZone.addValueEventListener(mZoneDataListener);
     }
 
     private void removeLocationListener() {
         DatabaseReference refChildren = mDb.getReference("family")
-                .child(mFamilyId);
+                .child(mCurrentGid);
         for (Person person : mFriends.values()) {
             com.google.firebase.database.Query queryLocation = refChildren.child(person.getUid())
                     .child("locationDatas").child(mTodayTime+"").orderByKey()
@@ -568,14 +725,14 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
         mMap.getUiSettings().setMapToolbarEnabled(false);
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(-37.8668, 145.016), 13));
         setUpClusterer();
-        getChildLocation();
-        locationTask = new GetLocationTask(this, getActivity(), 4);
-        checkPermission();
-        try {
-            locationTask.execute();
-        } catch (IllegalStateException ex) {
-
-        }
+//        getChildLocation();
+//        locationTask = new GetLocationTask(this, getActivity(), 4);
+//        checkPermission();
+//        try {
+//            locationTask.execute();
+//        } catch (IllegalStateException ex) {
+//
+//        }
     }
 
     private void setUpClusterer() {

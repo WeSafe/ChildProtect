@@ -13,4 +13,6 @@
     <color name="buttonColor">#d32f2f</color>
     <color name="buttonColorDark">#9a0007</color>
     <color name="backgroundColor">#99000000</color>
+    <color name="buttonGreen">#4caf50</color>
+    <color name="buttonGreenDark">#087f23</color>
 </resources>

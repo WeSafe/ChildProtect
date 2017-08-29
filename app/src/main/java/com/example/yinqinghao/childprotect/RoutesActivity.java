@@ -38,7 +38,7 @@ public class RoutesActivity extends AppCompatActivity {
 
     private FirebaseDatabase mDb;
 
-    private String mFamilyId;
+    private String mCurrentGid;
     private List<Route> mRoutes;
     private AdapterView.OnItemClickListener mGridClickListener;
     private AdapterView.OnItemLongClickListener mGridLongClickListener;
@@ -50,7 +50,7 @@ public class RoutesActivity extends AppCompatActivity {
         setContentView(R.layout.activity_routes);
 
         SharedPreferences sp = getSharedPreferences("ID", Context.MODE_PRIVATE);
-        mFamilyId = sp.getString("familyId",null);
+        mCurrentGid = sp.getString("currentGid",null);
         mDb = FirebaseDatabase.getInstance();
 
         mRoutesGrid = (GridView) findViewById(R.id.gridview_route);
@@ -89,7 +89,7 @@ public class RoutesActivity extends AppCompatActivity {
                             public void onClick(@NonNull SimpleDialog dialog, @NonNull SimpleDialog.BtnAction which) {
                                 showProgress();
                                 DatabaseReference refRoute = mDb.getReference("route")
-                                        .child(mFamilyId)
+                                        .child(mCurrentGid)
                                         .child(route.getId());
                                 refRoute.removeValue().addOnCompleteListener(new OnCompleteListener<Void>() {
                                     @Override
@@ -115,7 +115,7 @@ public class RoutesActivity extends AppCompatActivity {
     private void getData(){
         mRoutes = new ArrayList<>();
         DatabaseReference refZone = mDb.getReference("route")
-                .child(mFamilyId);
+                .child(mCurrentGid);
         refZone.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {

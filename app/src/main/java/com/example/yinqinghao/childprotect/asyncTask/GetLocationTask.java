@@ -91,7 +91,7 @@ public class GetLocationTask extends AsyncTask<String, Void, Location> {
 //            i++;
 //        }
         lo =  new Location("");
-        lo.setLatitude(-37.8768);
+        lo.setLatitude(-37.87705);
         lo.setLongitude(145.026);
         return lo;
     }

@@ -16,15 +16,15 @@ public class Route implements Parcelable {
     private String des;
     private String points;
     private String id;
-    private int distance;
-    private int duration;
+    private long distance;
+    private long duration;
     private String mode;
     private String latlngs;
 
     public Route() {
     }
 
-    public Route(Date createDate, String des, String points, String id, int distance, int duration, String mode, String latlngs) {
+    public Route(Date createDate, String des, String points, String id, long distance, long duration, String mode, String latlngs) {
         this.createDate = createDate;
         this.des = des;
         this.points = points;
@@ -40,8 +40,8 @@ public class Route implements Parcelable {
         des = in.readString();
         points = in.readString();
         id = in.readString();
-        distance = in.readInt();
-        duration = in.readInt();
+        distance = in.readLong();
+        duration = in.readLong();
         mode = in.readString();
         latlngs = in.readString();
     }
@@ -64,8 +64,8 @@ public class Route implements Parcelable {
         dest.writeString(des);
         dest.writeString(points);
         dest.writeString(id);
-        dest.writeInt(distance);
-        dest.writeInt(duration);
+        dest.writeLong(distance);
+        dest.writeLong(duration);
         dest.writeString(mode);
         dest.writeString(latlngs);
     }
@@ -102,19 +102,19 @@ public class Route implements Parcelable {
         this.id = id;
     }
 
-    public int getDistance() {
+    public long getDistance() {
         return distance;
     }
 
-    public void setDistance(int distance) {
+    public void setDistance(long distance) {
         this.distance = distance;
     }
 
-    public int getDuration() {
+    public long getDuration() {
         return duration;
     }
 
-    public void setDuration(int duration) {
+    public void setDuration(long duration) {
         this.duration = duration;
     }
 

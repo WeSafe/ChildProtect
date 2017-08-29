@@ -14,8 +14,10 @@ import android.widget.Toast;
 
 import com.example.yinqinghao.childprotect.LoginActivity;
 import com.example.yinqinghao.childprotect.asyncTask.GetLocationTask;
+import com.example.yinqinghao.childprotect.entity.Group;
 import com.example.yinqinghao.childprotect.entity.LocationData;
 import com.example.yinqinghao.childprotect.entity.Person;
+import com.example.yinqinghao.childprotect.entity.SharedData;
 import com.example.yinqinghao.childprotect.entity.Zone;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -40,7 +42,8 @@ public class LocationAlarmReceiver extends BroadcastReceiver
     private GetLocationTask locationTask;
     private Location mLocation;
     private String mMyId;
-    private String mFamilyId;
+    private String mGidsStr;
+    private List<String> mGroupIds;
     private int mBatteryLevel;
     private FirebaseDatabase mDb;
     private PowerManager.WakeLock mWl;
@@ -70,9 +73,10 @@ public class LocationAlarmReceiver extends BroadcastReceiver
         PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
         mWl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "");
         mWl.acquire();
-        mMyId = intent.getStringExtra("parentId");
-        mFamilyId = intent.getStringExtra("familyId");
-        if (mMyId == null || mFamilyId == null) {
+        mMyId = intent.getStringExtra("uid");
+        mGidsStr = intent.getStringExtra("groupIds");
+        getGids();
+        if (mMyId == null || mGidsStr == null) {
             Intent intent1 = new Intent(context, LoginActivity.class);
             context.startActivity(intent1);
             return;
@@ -92,11 +96,16 @@ public class LocationAlarmReceiver extends BroadcastReceiver
 
     }
 
+    private void getGids(){
+        Type listType = new TypeToken<List<String>>(){}.getType();
+        mGroupIds = new Gson().fromJson(mGidsStr, listType);
+    }
+
     public void setAlarm(Context context, String childId, String familyId) {
         AlarmManager am =(AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
         Intent i = new Intent(context, LocationAlarmReceiver.class);
-        i.putExtra("parentId", childId);
-        i.putExtra("familyId", familyId);
+        i.putExtra("uid", childId);
+        i.putExtra("groupIds", familyId);
         PendingIntent pi = PendingIntent.getBroadcast(context, 0, i, PendingIntent.FLAG_UPDATE_CURRENT);
         am.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + (2 * 1000), 1000 * 60, pi);
     }
@@ -148,44 +157,50 @@ public class LocationAlarmReceiver extends BroadcastReceiver
             }
         };
 
-        mParentTokenListener = new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                mParentTokens = new ArrayList<>();
-                if (dataSnapshot.exists()) {
-                    for (DataSnapshot ds : dataSnapshot.getChildren()) {
-                        if (ds.child("uid").getValue().toString().equals(mMyId)) continue;
-                        for (DataSnapshot ds1 : ds.child("notificationTokens").getChildren()) {
-                            String token = ds1.getKey();
-                            mParentTokens.add(token);
-                            break;
-                        }
-                    }
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        };
+//        mParentTokenListener = new ValueEventListener() {
+//            @Override
+//            public void onDataChange(DataSnapshot dataSnapshot) {
+//                mParentTokens = new ArrayList<>();
+//                if (dataSnapshot.exists()) {
+//                    Group g = dataSnapshot.getValue(Group.class);
+//                    Map<String, String> user = g.getUsers();
+//                    for (String key: user.keySet()) {
+//                        if (key != mMyId && !mParentTokens.contains(user.get(key))) {
+//                            mParentTokens.add(user.get(key));
+//                        }
+//                    }
+////                    for (DataSnapshot ds : dataSnapshot.getChildren()) {
+////                        if (ds.child("uid").getValue().toString().equals(mMyId)) continue;
+////                        for (DataSnapshot ds1 : ds.child("notificationTokens").getChildren()) {
+////                            String token = ds1.getKey();
+////                            mParentTokens.add(token);
+////                            break;
+////                        }
+////                    }
+//                }
+//            }
+//
+//            @Override
+//            public void onCancelled(DatabaseError databaseError) {
+//
+//            }
+//        };
     }
 
     private void getData() {
-        DatabaseReference refZones = mDb.getReference("zone")
-                .child(mFamilyId);
-        refZones.addValueEventListener(mZonesLinstener);
-        refZones.addListenerForSingleValueEvent(mZonesLinstener);
+        if (SharedData.getZones().size() == 0) {
+            for (String s : mGroupIds) {
+                DatabaseReference refZones = mDb.getReference("zone")
+                        .child(s);
+                refZones.addListenerForSingleValueEvent(mZonesLinstener);
+            }
+        } else {
+            mZones = SharedData.getZones().get(mGidsStr);
+        }
 
-        DatabaseReference refParents = mDb.getReference("family")
-                .child(mFamilyId);
-        refParents.addValueEventListener(mParentTokenListener);
-        refParents.addListenerForSingleValueEvent(mParentTokenListener);
-
-        DatabaseReference refChild = mDb.getReference("family")
-                .child(mFamilyId)
+        DatabaseReference refMe = mDb.getReference("userInfo")
                 .child(mMyId);
-        refChild.addListenerForSingleValueEvent(mChildListener);
+        refMe.addListenerForSingleValueEvent(mChildListener);
     }
 
     @Override
@@ -201,8 +216,7 @@ public class LocationAlarmReceiver extends BroadcastReceiver
         String today = Person.getDatetime() + "";
         LocationData locationData = new LocationData(new Date(),
                 location.getLatitude(),location.getLongitude(), mBatteryLevel, mMyId);
-        DatabaseReference refLocation = mDb.getReference("family")
-                .child(mFamilyId)
+        DatabaseReference refLocation = mDb.getReference("userInfo")
                 .child(mMyId)
                 .child("locationDatas")
                 .child(today)
@@ -213,6 +227,8 @@ public class LocationAlarmReceiver extends BroadcastReceiver
     }
 
     private void checkIfInZone(Location location) {
+        SharedData.addUser(mMyId, mMe);
+        SharedData.addZone(mGidsStr, mZones);
         float[] distance;
         List<String> notifiedZone = new ArrayList<>();
         for (Zone zone : mZones.values()) {
@@ -263,17 +279,37 @@ public class LocationAlarmReceiver extends BroadcastReceiver
         }
     }
 
-    private void send(String action, Zone zone) {
+    private void send(final String action, final Zone zone) {
         if (zone != null) {
-            for (String token : mParentTokens) {
-                DatabaseReference refNotification = mDb.getReference("notification")
-                        .child(token);
-                String date = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss")
-                        .format(new Date().getTime());
-                String msg = mMe.getFirstName() + " " + action + " the " + zone.getStatus()
-                        + " zone (" + zone.getDes() +") at " + date ;
-                refNotification.push().child(msg).setValue(true);
-            }
+            DatabaseReference refParents = mDb.getReference("group")
+                    .child(zone.getGid());
+            refParents.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    mParentTokens = new ArrayList<>();
+                    if (dataSnapshot.exists()) {
+                        Group g = dataSnapshot.getValue(Group.class);
+                        Map<String, String> user = g.getUsers();
+                        for (String key: user.keySet()) {
+                            if (!key.equals(mMyId) && !mParentTokens.contains(user.get(key))) {
+                                mParentTokens.add(user.get(key));
+                                DatabaseReference refNotification = mDb.getReference("notification")
+                                        .child(user.get(key));
+                                String date = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss")
+                                        .format(new Date().getTime());
+                                String msg = mMe.getFirstName() + " " + action + " the " + zone.getStatus()
+                                        + " zone (" + zone.getDes() +") at " + date ;
+                                refNotification.push().child(msg).setValue(true);
+                            }
+                        }
+                    }
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            });
         }
     }
 }

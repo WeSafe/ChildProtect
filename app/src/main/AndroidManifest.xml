@@ -55,6 +55,13 @@
 
         <receiver android:name=".receiver.LocationAlarmReceiver" />
 
+        <service
+            android:name=".service.RouteService"
+            android:enabled="true"
+            android:exported="true" />
+
+        <receiver android:name=".receiver.RouteAlarmReceiver" />
+
         <service android:name=".service.MyFirebaseInstanceIDService">
             <intent-filter>
                 <action android:name="com.google.firebase.INSTANCE_ID_EVENT" />

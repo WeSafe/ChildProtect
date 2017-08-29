@@ -111,7 +111,7 @@ public class AddZoneActivity extends AppCompatActivity implements OnMapReadyCall
             @Override
             public void onClick(View v) {
                 SharedPreferences sp = getSharedPreferences("ID", Context.MODE_PRIVATE);
-                final String familyId = sp.getString("familyId",null);
+                final String familyId = sp.getString("currentGid",null);
                 String des = mDesEditText.getText().toString().trim();
                 String status = mZoneRadioGroup.getCheckedRadioButtonId() == R.id.rb_safe_zone ? "safe" : "danger";
                 if (des.length() == 0) {
@@ -131,7 +131,7 @@ public class AddZoneActivity extends AppCompatActivity implements OnMapReadyCall
                 } else {
                     zoneId = zone.getId();
                 }
-                zone1 = new Zone(new Date(),des,mCenter.latitude,mCenter.longitude, (long) mRadiusMeters,status,zoneId);
+                zone1 = new Zone(new Date(),des,mCenter.latitude,mCenter.longitude, (long) mRadiusMeters,status,zoneId,familyId);
                 refZone.child(zoneId).setValue(zone1).addOnCompleteListener(new OnCompleteListener<Void>() {
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
@@ -321,6 +321,9 @@ public class AddZoneActivity extends AppCompatActivity implements OnMapReadyCall
                         MY_PERMISSIONS_REQUEST_FINE_LOCATION);
             } else
                 try {
+                    if (locationTask == null) {
+                        locationTask = new GetLocationTask(this,this, 0);
+                    }
                     locationTask.execute();
                 } catch (IllegalStateException ex) {
 
@@ -337,6 +340,9 @@ public class AddZoneActivity extends AppCompatActivity implements OnMapReadyCall
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     try {
+                        if (locationTask == null) {
+                            locationTask = new GetLocationTask(this,this, 0);
+                        }
                         locationTask.execute();
                     } catch (IllegalStateException ex) {
 
