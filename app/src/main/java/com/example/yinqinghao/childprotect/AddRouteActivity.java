@@ -249,7 +249,7 @@ public class AddRouteActivity extends AppCompatActivity implements OnMapReadyCal
         Route route = intent.getParcelableExtra("route");
         if (route == null) {
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(-37.8668, 145.016), 13));
-            locationTask = new GetLocationTask(this, this, 5);
+            locationTask = new GetLocationTask(this, this, 2);
             locationTask.execute();
         } else {
             String des = route.getDes();

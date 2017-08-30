@@ -116,7 +116,7 @@ public class RouteAlarmReceiver  extends BroadcastReceiver
     }
 
     private void checkIfInRoute(Location location) {
-        SharedData.addToken(mGid, mParentTokens);
+//        SharedData.addToken(mGid, mParentTokens);
         List<LatLng> points = PolyUtil.decode(mRoute.getPoints());
         LatLng myLatLng = new LatLng(location.getLatitude(), location.getLongitude());
         double tolerance = 20;
@@ -201,13 +201,16 @@ public class RouteAlarmReceiver  extends BroadcastReceiver
     }
 
     private void getData() {
-        if (SharedData.getTokens().containsKey(mGid)) {
-            DatabaseReference refParents = mDb.getReference("group")
-                    .child(mGid);
-            refParents.addListenerForSingleValueEvent(mParentTokenListener);
-        } else {
-            mParentTokens = SharedData.getTokens().get(mGid);
-        }
+        DatabaseReference refParents = mDb.getReference("group")
+                .child(mGid);
+        refParents.addListenerForSingleValueEvent(mParentTokenListener);
+//        if (SharedData.getTokens().containsKey(mGid)) {
+//            DatabaseReference refParents = mDb.getReference("group")
+//                    .child(mGid);
+//            refParents.addListenerForSingleValueEvent(mParentTokenListener);
+//        } else {
+//            mParentTokens = SharedData.getTokens().get(mGid);
+//        }
 
         DatabaseReference refMe = mDb.getReference("userInfo")
                 .child(mMyId);

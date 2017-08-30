@@ -188,15 +188,20 @@ public class LocationAlarmReceiver extends BroadcastReceiver
     }
 
     private void getData() {
-        if (SharedData.getZones().size() == 0) {
-            for (String s : mGroupIds) {
-                DatabaseReference refZones = mDb.getReference("zone")
-                        .child(s);
-                refZones.addListenerForSingleValueEvent(mZonesLinstener);
-            }
-        } else {
-            mZones = SharedData.getZones().get(mGidsStr);
+        for (String s : mGroupIds) {
+            DatabaseReference refZones = mDb.getReference("zone")
+                    .child(s);
+            refZones.addListenerForSingleValueEvent(mZonesLinstener);
         }
+//        if (SharedData.getZones().size() == 0) {
+//            for (String s : mGroupIds) {
+//                DatabaseReference refZones = mDb.getReference("zone")
+//                        .child(s);
+//                refZones.addListenerForSingleValueEvent(mZonesLinstener);
+//            }
+//        } else {
+//            mZones = SharedData.getZones().get(mGidsStr);
+//        }
 
         DatabaseReference refMe = mDb.getReference("userInfo")
                 .child(mMyId);
@@ -227,8 +232,8 @@ public class LocationAlarmReceiver extends BroadcastReceiver
     }
 
     private void checkIfInZone(Location location) {
-        SharedData.addUser(mMyId, mMe);
-        SharedData.addZone(mGidsStr, mZones);
+//        SharedData.addUser(mMyId, mMe);
+//        SharedData.addZone(mGidsStr, mZones);
         float[] distance;
         List<String> notifiedZone = new ArrayList<>();
         for (Zone zone : mZones.values()) {

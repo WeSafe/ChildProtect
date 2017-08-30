@@ -197,13 +197,17 @@ public class RouteGeoActivity extends AppCompatActivity implements OnMapReadyCal
                 .child(mMyId);
         refMe.addListenerForSingleValueEvent(mChildListener);
 
-        if (SharedData.getTokens().containsKey(mGid)) {
-            DatabaseReference refParents = mDb.getReference("group")
-                    .child(mGid);
-            refParents.addListenerForSingleValueEvent(mParentTokenListener);
-        } else {
-            mParentTokens = SharedData.getTokens().get(mGid);
-        }
+        DatabaseReference refParents = mDb.getReference("group")
+                .child(mGid);
+        refParents.addListenerForSingleValueEvent(mParentTokenListener);
+
+//        if (SharedData.getTokens().containsKey(mGid)) {
+//            DatabaseReference refParents = mDb.getReference("group")
+//                    .child(mGid);
+//            refParents.addListenerForSingleValueEvent(mParentTokenListener);
+//        } else {
+//            mParentTokens = SharedData.getTokens().get(mGid);
+//        }
     }
 
     private void popupTime(final long l) {
@@ -390,6 +394,9 @@ public class RouteGeoActivity extends AppCompatActivity implements OnMapReadyCal
         }
         Intent intent2 = new Intent(RouteGeoActivity.this, RouteService.class);
         stopService(intent2);
+        if (timer != null) {
+            timer.cancel();
+        }
         super.onDestroy();
     }
 }

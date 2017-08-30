@@ -352,8 +352,6 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
         showFab();
     }
 
-
-
     private void showFab() {
         mUiHandler.postDelayed(new Runnable() {
             @Override
@@ -463,6 +461,7 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
                         mClusterManager.addItem(newMarkerItem);
                         mClusterManager.cluster();
                         mFriendMarkerItems.put(childId, newMarkerItem);
+
                     }
                 }
             }
@@ -551,7 +550,7 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
                                     Person person = dataSnapshot.getValue(Person.class);
                                     if (person.getUid().equals(uid)) {
                                         mMe = person;
-                                        SharedData.addUser(mMe.getUid(), mMe);
+//                                        SharedData.addUser(mMe.getUid(), mMe);
                                     } else {
                                         id = person.getUid();
                                         mFriends.put(id, person);
