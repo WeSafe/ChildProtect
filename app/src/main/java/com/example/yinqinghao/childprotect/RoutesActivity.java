@@ -51,6 +51,8 @@ public class RoutesActivity extends AppCompatActivity {
 
         SharedPreferences sp = getSharedPreferences("ID", Context.MODE_PRIVATE);
         mCurrentGid = sp.getString("currentGid",null);
+        String gName = sp.getString("currentGName", null);
+        setTitle("Route GeoFencing (" + gName +")");
         mDb = FirebaseDatabase.getInstance();
 
         mRoutesGrid = (GridView) findViewById(R.id.gridview_route);

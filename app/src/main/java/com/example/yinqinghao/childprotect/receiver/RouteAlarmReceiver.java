@@ -12,6 +12,7 @@ import android.os.PowerManager;
 import android.widget.Toast;
 
 import com.example.yinqinghao.childprotect.LoginActivity;
+import com.example.yinqinghao.childprotect.RouteGeoActivity;
 import com.example.yinqinghao.childprotect.asyncTask.GetLocationTask;
 import com.example.yinqinghao.childprotect.entity.Group;
 import com.example.yinqinghao.childprotect.entity.LocationData;
@@ -138,6 +139,7 @@ public class RouteAlarmReceiver  extends BroadcastReceiver
             String msg = mMe.getFirstName() + " is not on the route (" + route.getDes() +") at " + date ;
             refNotification.push().child(msg).setValue(true);
         }
+        Toast.makeText(mContext, "You are out of path.", Toast.LENGTH_SHORT).show();
     }
 
     public void setAlarm(Context context, String childId, String familyId) {

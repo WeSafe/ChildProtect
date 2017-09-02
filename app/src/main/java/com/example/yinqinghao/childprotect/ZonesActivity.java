@@ -55,9 +55,8 @@ public class ZonesActivity extends AppCompatActivity {
 
         SharedPreferences sp = getSharedPreferences("ID", Context.MODE_PRIVATE);
         mCurrentGid = sp.getString("currentGid",null);
-//        String str = sp.getString("groupIds", null);
-//        Type listType = new TypeToken<List<String>>(){}.getType();
-//        mGids = new Gson().fromJson(str, listType);
+        String gName = sp.getString("currentGName", null);
+        setTitle("Alert Zones (" + gName +")");
         mDb = FirebaseDatabase.getInstance();
 
 

@@ -59,6 +59,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -86,25 +87,25 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
     private static final int ZONE_ACTIVITY = 876;
     private static final String TAG = "MapsFragment";
     private GetLocationTask locationTask;
-//    private GetGPSTask locationTask;
     private Location mLocation;
+
     private MapView mMapView;
     private View mView;
-
     private FloatingActionMenu mMenuHistory;
     private FloatingActionButton mButtenRealTime;
     private FloatingActionButton mButtonUploadLocation;
     private FloatingActionButton mButtonPause;
     private TextView mTextDate;
     private View mHisTutor;
+    private Spinner mSpinner;
 
     private FirebaseDatabase mDb;
-//    private ValueEventListener mFidValueListener;
-//    private ValueEventListener mFriendValueListener;
     private ValueEventListener mLocationDataValueListner;
     private ValueEventListener mZoneDataListener;
     private ValueEventListener mFriendIdValueListener;
     private ValueEventListener mGroupValueListener;
+    private ValueEventListener myLocationListener;
+    private Query myLocationQuery;
 
     private Handler mUiHandler = new Handler();
 
@@ -123,6 +124,8 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
     private List<Polyline> mLines;
     private ClusterManager<MarkerItem> mClusterManager;
     private long mTodayTime;
+    private boolean isFirst = true;
+    private boolean showTutorial = true;
 
     public MapsFragment() {
         // Required empty public constructor
@@ -182,7 +185,7 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
         if (groupIds != null) {
             Type listType = new TypeToken<List<String>>(){}.getType();
             mGroupIds = new Gson().fromJson(groupIds, listType);
-            setmCurrentGid(mGroupIds.get(0));
+//            setmCurrentGid(0);
         }
         uid = sp.getString("uid", null);
     }
@@ -286,7 +289,7 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
                         routeOption.add(camera);
                         Polyline polyline = mMap.addPolyline(routeOption);
                         mLines.add(polyline);
-                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(camera, 19));
+                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(camera, 15));
                     }
                 }, delay);
                 delay += 800;
@@ -333,6 +336,7 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
                 SharedData.setStartedService(true);
                 mButtonUploadLocation.hide(false);
                 mButtonPause.show(false);
+                updateMyLocationMarker();
                 Toast.makeText(getActivity(), "Uploading your location now.", Toast.LENGTH_SHORT).show();
             }
         });
@@ -345,11 +349,28 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
                 SharedData.setStartedService(false);
                 mButtonUploadLocation.show(false);
                 mButtonPause.hide(false);
+                removeMyLocationMarker();
                 Toast.makeText(getActivity(), "Stop uploading.", Toast.LENGTH_SHORT).show();
             }
         });
 
         showFab();
+    }
+
+    private void updateMyLocationMarker() {
+        myLocationQuery = mDb.getReference("userInfo")
+                .child(uid)
+                .child("locationDatas")
+                .child(mTodayTime+"")
+                .orderByKey()
+                .limitToLast(1);
+        myLocationQuery.addValueEventListener(myLocationListener);
+    }
+
+    private void removeMyLocationMarker() {
+        if (myLocationQuery != null) {
+            myLocationQuery.removeEventListener(myLocationListener);
+        }
     }
 
     private void showFab() {
@@ -364,7 +385,6 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
             @Override
             public void run() {
                 mButtenRealTime.show(true);
-                showTutorial(mButtenRealTime, mHisTutor);
             }
         }, 550);
 
@@ -372,20 +392,43 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
             @Override
             public void run() {
                 mButtonUploadLocation.show(true);
+                showTutorial(mButtenRealTime, mHisTutor, mButtonUploadLocation, mSpinner);
             }
         }, 700);
     }
 
-    private void setmCurrentGid(String gid) {
-        mCurrentGid = gid;
+    private void setmCurrentGid(int position) {
+        mCurrentGid = mGroupIds.get(position);
         SharedPreferences sp = getActivity().getSharedPreferences("ID", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sp.edit();
         editor.putString("currentGid", mCurrentGid);
+        editor.putString("currentGName", mGroupNames.get(position));
         editor.apply();
     }
 
     private void initListener() {
         mDb = FirebaseDatabase.getInstance();
+
+        myLocationListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (isFirst) {
+                    isFirst = false;
+                    return;
+                }
+                if (dataSnapshot.exists()) {
+                    for (DataSnapshot ds : dataSnapshot.getChildren()) {
+                        LocationData locationData = ds.getValue(LocationData.class);
+                        setmMyMarkerItem(new LatLng(locationData.getLat(),locationData.getLng()));
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        };
 
         mGroupValueListener = new ValueEventListener() {
             @Override
@@ -398,19 +441,19 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
 
                 if (mGroupIds.size() == mGroupNames.size()) {
                     Toolbar toolbar = (Toolbar) getActivity().findViewById(R.id.toolbar);
-                    Spinner spinner = new Spinner(getActivity());
+                    mSpinner = new Spinner(getActivity());
                     ArrayAdapter spinnerArrayAdapter = new ArrayAdapter(getActivity(),
                             R.layout.spinner_item,
                             mGroupNames);
-                    spinner.setAdapter(spinnerArrayAdapter);
-                    spinner.getBackground().setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_ATOP);
-                    spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                    mSpinner.setAdapter(spinnerArrayAdapter);
+                    mSpinner.getBackground().setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_ATOP);
+                    mSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                         @Override
                         public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                             mMap.clear();
                             mClusterManager.clearItems();
                             markMyLocation();
-                            setmCurrentGid(mGroupIds.get(position));
+                            setmCurrentGid(position);
                             getChildLocation();
                         }
 
@@ -420,7 +463,7 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
                         }
                     });
                     toolbar.removeViewAt(1);
-                    toolbar.addView(spinner);
+                    toolbar.addView(mSpinner);
                 }
             }
 
@@ -441,6 +484,7 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
                     if (locationData == null) return;
                     String childId = locationData.getUid();
                     Person person = mFriends.get(childId);
+                    if (person == null ) return;
                     Map<String,Map<String, LocationData>> childLocations = person.getLocationDatas();
                     if (childLocations.containsKey(mTodayTime+"")) {
                         childLocations.get(mTodayTime+"").put(locationData.getDatetime().getTime()+"",locationData);
@@ -510,7 +554,6 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
 //                Log.w(TAG, "loadChildren:onCancelled", databaseError.toException());
 //            }
 //        };
-
         mZoneDataListener = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -663,6 +706,11 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
     }
 
     private void addChildMarker(Person c) {
+        if (mFriendMarkerItems.size() != 0) {
+            for (MarkerItem mi: mFriendMarkerItems.values()) {
+                mClusterManager.removeItem(mi);
+            }
+        }
         LocationData locationData = c.getMostRecentLocation();
         if (locationData == null)   return;
         MarkerItem newMarkerItem = new MarkerItem(new LatLng(locationData.getLat(),locationData.getLng()),
@@ -726,7 +774,7 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
         setUpClusterer();
 //        getChildLocation();
 //        locationTask = new GetLocationTask(this, getActivity(), 4);
-//        checkPermission();
+        checkPermission();
 //        try {
 //            locationTask.execute();
 //        } catch (IllegalStateException ex) {
@@ -760,9 +808,16 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
                 new LatLng(camera.getLatitude(), camera.getLongitude()), 13));
 
         LatLng myLatLng = new LatLng(mLocation.getLatitude(),mLocation.getLongitude());
+        setmMyMarkerItem(myLatLng);
+    }
+
+    private void setmMyMarkerItem(LatLng myLatLng) {
+        if (mMyMarkerItem != null) {
+            mClusterManager.removeItem(mMyMarkerItem);
+        }
         mMyMarkerItem = new MarkerItem(myLatLng, "My Location", "");
         mMyMarkerItem.setmIcon(BitmapDescriptorFactory.defaultMarker(
-                        BitmapDescriptorFactory.HUE_AZURE));
+                BitmapDescriptorFactory.HUE_AZURE));
         mClusterManager.addItem(mMyMarkerItem);
         mClusterManager.cluster();
     }
@@ -785,12 +840,18 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
         super.onActivityResult(requestCode, resultCode, data);
     }
 
-    private void showTutorial(View view, View view2) {
-        SpotlightSequence.getInstance(getActivity(),null)
-                .addSpotlight(view,
-                        "Real-Time Location", "Click to know the location of your kids ", "+++wq+sasssss=q++")
-                .addSpotlight(view2,
-                        "History Route", "Click here to see the history route of your kids", "-s-sasqwsssq=---")
-                .startSequence();
+    private void showTutorial(View view, View view2, View view3, View view4) {
+        if (SharedData.isShowTutorial1()) {
+            SpotlightSequence.getInstance(getActivity(),null)
+                    .addSpotlight(view,
+                            "Real-Time Location", "Click to know the location of friends ", SharedData.getRandomStr())
+                    .addSpotlight(view2,
+                            "History Route", "Click here to see the history route of friends", SharedData.getRandomStr())
+                    .addSpotlight(view3,
+                            "Update Location", "Click here to update your location", SharedData.getRandomStr())
+                    .addSpotlight(view4,
+                            "Friends Groups", "Click here change your friends group", SharedData.getRandomStr())
+                    .startSequence();
+        }
     }
 }

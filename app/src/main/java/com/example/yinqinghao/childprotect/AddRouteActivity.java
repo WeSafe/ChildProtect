@@ -43,6 +43,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import com.google.maps.android.PolyUtil;
+import com.wooplr.spotlight.utils.SpotlightSequence;
 
 import java.lang.reflect.Type;
 import java.sql.Time;
@@ -89,6 +90,7 @@ public class AddRouteActivity extends AppCompatActivity implements OnMapReadyCal
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_route);
+        setTitle("Route");
 
         MapsInitializer.initialize(this);
         mMapView = (MapView) findViewById(R.id.map_add_route);
@@ -343,24 +345,33 @@ public class AddRouteActivity extends AppCompatActivity implements OnMapReadyCal
                 startLatLag, 14));
         mStartMarker = mMap.addMarker(new MarkerOptions()
                 .position(startLatLag)
+                .title("Start Place")
+                .snippet("long click to drag")
                 .anchor(0.0f, 1.0f)
                 .draggable(true));
 
         mEndMarker = mMap.addMarker(new MarkerOptions()
                 .position(endLatLag)
+                .title("End Place")
+                .snippet("long click to drag")
                 .anchor(0.0f, 1.0f)
                 .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE))
                 .draggable(true));
+        mStartMarker.showInfoWindow();
     }
 
     private void setMarkers(List<LatLng> list) {
         mStartMarker = mMap.addMarker(new MarkerOptions()
                 .position(list.get(0))
+                .title("Start Place")
+                .snippet("long click to drag")
                 .anchor(0.0f, 1.0f)
                 .draggable(true));
 
         mEndMarker = mMap.addMarker(new MarkerOptions()
                 .position(list.get(1))
+                .title("End Place")
+                .snippet("long click to drag")
                 .anchor(0.0f, 1.0f)
                 .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE))
                 .draggable(true));
@@ -376,6 +387,7 @@ public class AddRouteActivity extends AppCompatActivity implements OnMapReadyCal
             wayPoint.showInfoWindow();
             mWayPoints.add(wayPoint);
         }
+        mStartMarker.showInfoWindow();
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mStartMarker.getPosition(), 14));
     }
 

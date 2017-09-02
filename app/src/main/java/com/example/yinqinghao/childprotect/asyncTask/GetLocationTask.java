@@ -52,6 +52,7 @@ public class GetLocationTask extends AsyncTask<String, Void, Location> {
     private static double longitude;
     private static double latitude;
     private static int loopTimes;
+    private static GetLocationTask getLocationTask;
     //location listerer
     private static MyLocationListener myLocationListener;
 
@@ -67,6 +68,13 @@ public class GetLocationTask extends AsyncTask<String, Void, Location> {
         this.context = context;
         this.loopTimes = loopTimes;
         myLocationListener = new MyLocationListener();
+    }
+
+    public static GetLocationTask start(GetLocationTask.LocationResponse delegate, Context activity) {
+        if (getLocationTask != null) return null;
+        getLocationTask = new GetLocationTask(delegate,activity,1);
+        getLocationTask.execute();
+        return getLocationTask;
     }
 
     @Override
@@ -152,14 +160,21 @@ public class GetLocationTask extends AsyncTask<String, Void, Location> {
      */
     @Override
     protected void onPostExecute(Location location) {
+        if (getLocationTask == null) {
+            removeListener();
+            delegate.locationProcessFinish(location);
+            latitude = 0;
+        } else {
+            getLocationTask = null;
+            delegate.locationProcessFinish(location);
+            latitude = 0;
+            start(delegate,context);
+        }
+    }
+
+    public void stop() {
         removeListener();
-//        if (location == null) {
-//            location = new Location("");
-//            location.setLatitude(-37.8768);
-//            location.setLongitude(145.026);
-//        }
-        delegate.locationProcessFinish(location);
-        latitude = 0;
+        getLocationTask = null;
     }
 
     public void removeListener() {

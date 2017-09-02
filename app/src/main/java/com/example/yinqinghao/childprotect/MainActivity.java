@@ -7,11 +7,14 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.view.MenuItemCompat;
 import android.util.Log;
+import android.view.ContextMenu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -21,16 +24,21 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.animation.Animation;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.brouding.simpledialog.SimpleDialog;
 import com.example.yinqinghao.childprotect.entity.Route;
 import com.example.yinqinghao.childprotect.entity.SharedData;
 import com.example.yinqinghao.childprotect.fragment.MapsFragment;
+import com.github.tbouron.shakedetector.library.ShakeDetector;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.wooplr.spotlight.utils.SpotlightSequence;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,6 +50,7 @@ public class MainActivity extends AppCompatActivity
     private DrawerLayout drawer;
     private TextView usernameTextView;
     private TextView emailTextView;
+    private ImageView sosImageView;
     private MenuItem accountNavItem;
 
     private Fragment mMapFragment;
@@ -98,7 +107,96 @@ public class MainActivity extends AppCompatActivity
         //find the login views
         usernameTextView = (TextView) navigationView.getHeaderView(0).findViewById(R.id.txtUserName);
         emailTextView = (TextView) navigationView.getHeaderView(0).findViewById(R.id.txtUserEmail);
+        sosImageView = (ImageView) navigationView.getHeaderView(0).findViewById(R.id.img_sos);
+        sosImageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, SOSActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (drawer.isDrawerOpen(GravityCompat.START)) {
+                    drawer.closeDrawer(GravityCompat.START);
+                } else {
+                    drawer.openDrawer(GravityCompat.START);
+                    Handler handler = new Handler();
+                    handler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            showTutorial(sosImageView);
+                        }
+                    }, 500);
+                }
+            }
+        });
+
         mAuth = FirebaseAuth.getInstance();
+        setUpShakeToSos();
+    }
+
+    private void setUpShakeToSos() {
+        ShakeDetector.create(this, new ShakeDetector.OnShakeListener() {
+            @Override
+            public void OnShake() {
+                popupStart();
+                ShakeDetector.stop();
+            }
+        });
+        ShakeDetector.updateConfiguration(8, 3);
+    }
+
+    private void popupStart() {
+        new SimpleDialog.Builder(this)
+                .setTitle("Do you want to send SOS message", true)
+                .onConfirm(new SimpleDialog.BtnCallback() {
+                    @Override
+                    public void onClick(@NonNull SimpleDialog dialog, @NonNull SimpleDialog.BtnAction which) {
+                        Intent intent = new Intent(MainActivity.this, SOSActivity.class);
+                        startActivity(intent);
+                        ShakeDetector.start();
+                    }
+                })
+                .setBtnConfirmText("Yes")
+                .setBtnConfirmTextColor("#e6b115")
+                .setBtnCancelText("No")
+                .onCancel(new SimpleDialog.BtnCallback() {
+                    @Override
+                    public void onClick(@NonNull SimpleDialog dialog, @NonNull SimpleDialog.BtnAction which) {
+                        ShakeDetector.start();
+                    }
+                })
+                .show();
+    }
+
+    private void showTutorial(View view) {
+        if (SharedData.isShowTutorial3()) {
+            SpotlightSequence.getInstance(this,null)
+                    .addSpotlight(view,
+                            "SOS", "Shake your phone 3 times or click it to get help", SharedData.getRandomStr())
+                    .startSequence();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        ShakeDetector.start();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        ShakeDetector.stop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        ShakeDetector.destroy();
     }
 
     @Override

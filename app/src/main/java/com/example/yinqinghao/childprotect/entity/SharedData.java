@@ -3,6 +3,7 @@ package com.example.yinqinghao.childprotect.entity;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 /**
  * Created by yinqinghao on 29/8/17.
@@ -12,6 +13,10 @@ public class SharedData {
     private static boolean startedService = false;
     private static Route route;
     private static boolean onPath = true;
+    private static String randomStr;
+    private static boolean showTutorial1 = true;
+    private static boolean showTutorial2 = true;
+    private static boolean showTutorial3 = true;
 //    private static Map<String, List<String>> tokens = new HashMap<>();
 //    private static Map<String, Person> user = new HashMap<>();
 //    private static Map<String, Map<String, Zone>> zones = new HashMap<>();
@@ -75,6 +80,32 @@ public class SharedData {
 //    public static void addZone(String gid, Map<String, Zone> z) {
 //        zones.put(gid,z);
 //    }
+
+
+    public static boolean isShowTutorial1() {
+        boolean a = showTutorial1;
+        showTutorial1 = false;
+        return a;
+    }
+
+    public static boolean isShowTutorial2() {
+        boolean a = showTutorial2;
+        showTutorial2 = false;
+        return a;
+    }
+
+    public static boolean isShowTutorial3() {
+        boolean a = showTutorial3;
+        showTutorial3 = false;
+        return a;
+    }
+
+    public static String getRandomStr() {
+        Random random = new Random();
+        randomStr = random.nextInt(50000) + "";
+        return randomStr;
+    }
+
 
     public static void clear() {
         startedService = false;

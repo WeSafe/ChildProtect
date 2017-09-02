@@ -25,6 +25,7 @@ import android.widget.Toast;
 
 import com.dd.processbutton.FlatButton;
 import com.example.yinqinghao.childprotect.asyncTask.GetLocationTask;
+import com.example.yinqinghao.childprotect.entity.SharedData;
 import com.example.yinqinghao.childprotect.entity.Zone;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -214,17 +215,21 @@ public class AddZoneActivity extends AppCompatActivity implements OnMapReadyCall
     }
 
     private void showTutorial(View view, View view2) {
-        SpotlightSequence.getInstance(this,null)
-                .addSpotlight(view,
-                        "Center of The Area", "Long Click to drag the center of the area.", "1eqsasswwsssssq")
-                .addSpotlight(view2,
-                        "Radius of The Area", "Long Click to adjust the radius of the area", "1qwdasssssssssa")
-                .startSequence();
+        if (SharedData.isShowTutorial2()) {
+            SpotlightSequence.getInstance(this,null)
+                    .addSpotlight(view,
+                            "Center of The Area", "Long Click to drag the center of the area.", SharedData.getRandomStr())
+                    .addSpotlight(view2,
+                            "Radius of The Area", "Long Click to adjust the radius of the area", SharedData.getRandomStr())
+                    .startSequence();
+        }
     }
 
     private void drawCircle(LatLng latLng, double radius, int strokeColor, int fillColor) {
         mCenterMarker = mMap.addMarker(new MarkerOptions()
                 .position(latLng)
+                .title("center")
+                .snippet("long click to drag")
                 .anchor(0.0f, 1.0f)
                 .draggable(true));
 
@@ -245,6 +250,7 @@ public class AddZoneActivity extends AppCompatActivity implements OnMapReadyCall
                 .clickable(true);
 
         mCircle = mMap.addCircle(circleOptions);
+        mCenterMarker.showInfoWindow();
     }
 
     public boolean onMarkerMoved(Marker marker) {

@@ -12,6 +12,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.brouding.simpledialog.SimpleDialog;
 import com.dd.processbutton.FlatButton;
@@ -82,6 +83,7 @@ public class RouteGeoActivity extends AppCompatActivity implements OnMapReadyCal
     private ValueEventListener mLocationValueListener;
     private ValueEventListener mParentTokenListener;
     private ValueEventListener mChildListener;
+    private ValueEventListener mReachedMessageListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -112,15 +114,13 @@ public class RouteGeoActivity extends AppCompatActivity implements OnMapReadyCal
         if (!SharedData.isStartedService()) {
             Intent intent = new Intent(RouteGeoActivity.this, LocationService.class);
             startService(intent);
-            DatabaseReference refMe = mDb.getReference("userInfo")
-                    .child(mAuth.getCurrentUser().getUid());
-            com.google.firebase.database.Query queryLocation = refMe
-                    .child("locationDatas").child(mTodayTime + "").orderByKey()
-                    .limitToLast(1);
-            queryLocation.addValueEventListener(mLocationValueListener);
         }
-
-
+        DatabaseReference refMe = mDb.getReference("userInfo")
+                .child(mAuth.getCurrentUser().getUid());
+        com.google.firebase.database.Query queryLocation = refMe
+                .child("locationDatas").child(mTodayTime + "").orderByKey()
+                .limitToLast(1);
+        queryLocation.addValueEventListener(mLocationValueListener);
 
         mBtnClose.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -141,6 +141,7 @@ public class RouteGeoActivity extends AppCompatActivity implements OnMapReadyCal
     }
 
     private void stop() {
+        popupReachMessage();
         mBtnStart.setVisibility(View.VISIBLE);
         mBtnStop.setVisibility(View.GONE);
         Intent intent = new Intent(RouteGeoActivity.this, LocationService.class);
@@ -200,14 +201,6 @@ public class RouteGeoActivity extends AppCompatActivity implements OnMapReadyCal
         DatabaseReference refParents = mDb.getReference("group")
                 .child(mGid);
         refParents.addListenerForSingleValueEvent(mParentTokenListener);
-
-//        if (SharedData.getTokens().containsKey(mGid)) {
-//            DatabaseReference refParents = mDb.getReference("group")
-//                    .child(mGid);
-//            refParents.addListenerForSingleValueEvent(mParentTokenListener);
-//        } else {
-//            mParentTokens = SharedData.getTokens().get(mGid);
-//        }
     }
 
     private void popupTime(final long l) {
@@ -233,6 +226,7 @@ public class RouteGeoActivity extends AppCompatActivity implements OnMapReadyCal
                     @Override
                     public void onClick(@NonNull SimpleDialog dialog, @NonNull SimpleDialog.BtnAction which) {
                         start();
+                        SharedData.setOnPath(true);
                     }
                 })
                 .setBtnConfirmText("Yes")
@@ -255,6 +249,32 @@ public class RouteGeoActivity extends AppCompatActivity implements OnMapReadyCal
                 .setBtnCancelText("No")
                 .show();
         reminded = true;
+    }
+
+    private void popupReachMessage () {
+        new SimpleDialog.Builder(RouteGeoActivity.this)
+                .setTitle("Do you want to send a reached message?", true)
+                .onConfirm(new SimpleDialog.BtnCallback() {
+                    @Override
+                    public void onClick(@NonNull SimpleDialog dialog, @NonNull SimpleDialog.BtnAction which) {
+                        sendReachedMessage();
+                    }
+                })
+                .setBtnConfirmText("Yes")
+                .setBtnConfirmTextColor("#e6b115")
+                .setBtnCancelText("No")
+                .show();
+    }
+
+    private void sendReachedMessage() {
+        if (mUser == null) {
+            DatabaseReference refMe = mDb.getReference("userInfo")
+                    .child(mMyId);
+            refMe.addListenerForSingleValueEvent(mChildListener);
+        }
+        DatabaseReference refParents = mDb.getReference("group")
+                .child(mGid);
+        refParents.addListenerForSingleValueEvent(mReachedMessageListener);
     }
 
     private void initListener() {
@@ -320,6 +340,35 @@ public class RouteGeoActivity extends AppCompatActivity implements OnMapReadyCal
                         }
                     }
                 }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        };
+
+        mReachedMessageListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                mParentTokens = new ArrayList<>();
+                if (dataSnapshot.exists()) {
+                    Group g = dataSnapshot.getValue(Group.class);
+                    Map<String, String> user = g.getUsers();
+                    for (String key: user.keySet()) {
+                        if (!key.equals(mMyId) && !mParentTokens.contains(user.get(key))) {
+                            mParentTokens.add(user.get(key));
+                            DatabaseReference refNotification = mDb.getReference("notification")
+                                    .child(user.get(key));
+                            String date = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss")
+                                    .format(new Date().getTime());
+                            String msg = mUser.getFirstName() + " has reached destination " +
+                                    "(route: " + mRoute.getDes() +") at " + date ;
+                            refNotification.push().child(msg).setValue(true);
+                        }
+                    }
+                }
+                Toast.makeText(RouteGeoActivity.this, "Message is sent", Toast.LENGTH_SHORT).show();
             }
 
             @Override
