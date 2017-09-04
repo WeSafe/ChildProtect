@@ -15,4 +15,5 @@
     <color name="backgroundColor">#99000000</color>
     <color name="buttonGreen">#4caf50</color>
     <color name="buttonGreenDark">#087f23</color>
+    <color name="splashColor">#79dfef</color>
 </resources>

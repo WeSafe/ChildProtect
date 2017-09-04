@@ -15,6 +15,7 @@ import android.widget.GridView;
 
 import com.brouding.simpledialog.SimpleDialog;
 import com.example.yinqinghao.childprotect.adapter.GridAdapter;
+import com.example.yinqinghao.childprotect.entity.SharedData;
 import com.example.yinqinghao.childprotect.entity.Zone;
 import com.github.clans.fab.FloatingActionButton;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -52,6 +53,7 @@ public class ZonesActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_zones);
+        SharedData.pushContext(this);
 
         SharedPreferences sp = getSharedPreferences("ID", Context.MODE_PRIVATE);
         mCurrentGid = sp.getString("currentGid",null);

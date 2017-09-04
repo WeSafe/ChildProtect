@@ -5,16 +5,10 @@ import android.app.FragmentManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.support.v4.view.MenuItemCompat;
 import android.util.Log;
-import android.view.ContextMenu;
-import android.view.MenuInflater;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -22,26 +16,21 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.Menu;
 import android.view.MenuItem;
-import android.view.animation.Animation;
-import android.widget.ArrayAdapter;
 import android.widget.ImageView;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.brouding.simpledialog.SimpleDialog;
-import com.example.yinqinghao.childprotect.entity.Route;
 import com.example.yinqinghao.childprotect.entity.SharedData;
 import com.example.yinqinghao.childprotect.fragment.MapsFragment;
-import com.github.tbouron.shakedetector.library.ShakeDetector;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.wooplr.spotlight.utils.SpotlightSequence;
 
-import java.util.ArrayList;
-import java.util.List;
+import safety.com.br.android_shake_detector.core.ShakeCallback;
+import safety.com.br.android_shake_detector.core.ShakeDetector;
+import safety.com.br.android_shake_detector.core.ShakeOptions;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener{
@@ -52,6 +41,9 @@ public class MainActivity extends AppCompatActivity
     private TextView emailTextView;
     private ImageView sosImageView;
     private MenuItem accountNavItem;
+    private SimpleDialog mDialog;
+    private ShakeDetector mShakeDetector;
+    private ShakeCallback mShakeCallack;
 
     private Fragment mMapFragment;
     private FirebaseAuth mAuth;
@@ -66,6 +58,8 @@ public class MainActivity extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         setTitle("");
+
+
 
         drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -90,11 +84,14 @@ public class MainActivity extends AppCompatActivity
                     String name = sp.getString("name",null);
                     String email = sp.getString("email", null);
                     setUserInfo(email,name);
+                    setUpShakeToSos();
+                    popupSplashActivity();
                 } else {
                     // User is signed out
                     Log.d(TAG, "onAuthStateChanged:signed_out");
                     Intent intent = new Intent(MainActivity.this, LoginActivity.class);
                     startActivityForResult(intent,1);
+                    SharedData.setIsSplashed(false);
                     return;
                 }
             }
@@ -138,38 +135,25 @@ public class MainActivity extends AppCompatActivity
         setUpShakeToSos();
     }
 
-    private void setUpShakeToSos() {
-        ShakeDetector.create(this, new ShakeDetector.OnShakeListener() {
-            @Override
-            public void OnShake() {
-                popupStart();
-                ShakeDetector.stop();
-            }
-        });
-        ShakeDetector.updateConfiguration(8, 3);
+    private void popupSplashActivity() {
+        if (!SharedData.isSplashed()) {
+            Intent intent = new Intent(this, SplashActivity.class);
+            startActivity(intent);
+            overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+            SharedData.setIsSplashed(true);
+        }
     }
 
-    private void popupStart() {
-        new SimpleDialog.Builder(this)
-                .setTitle("Do you want to send SOS message", true)
-                .onConfirm(new SimpleDialog.BtnCallback() {
-                    @Override
-                    public void onClick(@NonNull SimpleDialog dialog, @NonNull SimpleDialog.BtnAction which) {
-                        Intent intent = new Intent(MainActivity.this, SOSActivity.class);
-                        startActivity(intent);
-                        ShakeDetector.start();
-                    }
-                })
-                .setBtnConfirmText("Yes")
-                .setBtnConfirmTextColor("#e6b115")
-                .setBtnCancelText("No")
-                .onCancel(new SimpleDialog.BtnCallback() {
-                    @Override
-                    public void onClick(@NonNull SimpleDialog dialog, @NonNull SimpleDialog.BtnAction which) {
-                        ShakeDetector.start();
-                    }
-                })
-                .show();
+    private void setUpShakeToSos() {
+        SharedData.clearContext();
+        SharedData.pushContext(this);
+        ShakeOptions options = new ShakeOptions()
+                .background(true)
+                .interval(1000)
+                .shakeCount(3)
+                .sensibility(2.0f);
+
+        mShakeDetector = new ShakeDetector(options).start(this);
     }
 
     private void showTutorial(View view) {
@@ -183,20 +167,26 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onResume() {
+        if (mShakeDetector != null && !mShakeDetector.isRunning()) {
+            mShakeDetector.start(this);
+        }
         super.onResume();
-        ShakeDetector.start();
     }
 
     @Override
     protected void onPause() {
+        if (mShakeDetector != null) {
+            mShakeDetector.stopShakeDetector(this);
+        }
         super.onPause();
-        ShakeDetector.stop();
     }
 
     @Override
     protected void onDestroy() {
+        if (mShakeDetector != null) {
+            mShakeDetector.destroy(getBaseContext());
+        }
         super.onDestroy();
-        ShakeDetector.destroy();
     }
 
     @Override
@@ -271,6 +261,7 @@ public class MainActivity extends AppCompatActivity
         SharedData.clear();
         mAuth.signOut();
         drawer.closeDrawer(GravityCompat.START);
+        mShakeDetector.stopShakeDetector(this);
     }
 
 

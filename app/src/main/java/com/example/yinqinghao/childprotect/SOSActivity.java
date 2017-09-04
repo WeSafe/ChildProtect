@@ -74,7 +74,7 @@ public class SOSActivity extends AppCompatActivity implements OnMapReadyCallback
 
     private final String BASE_GOOGLE_ROUTE_URL = "https://maps.googleapis.com/maps/api/directions/json?";
 //    private final String BASE_MY_SERVER_URL = "http://118.138.189.107:8080/ieWebServices/rest/sh/getNearestSafeHouse";
-    private final String BASE_MY_SERVER_URL = "http://101.181.27.33:8080/ieWebServices/rest/sh/getNearestSafeHouse";
+    private final String BASE_MY_SERVER_URL = "http://118.139.77.223:8080/ieWebServices/rest/sh/getNearestSafeHouse";
 
     private GoogleMap mMap;
     private FirebaseDatabase mDb;
@@ -113,6 +113,7 @@ public class SOSActivity extends AppCompatActivity implements OnMapReadyCallback
         setContentView(R.layout.activity_sos);
         setTitle("The closest safe place");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        SharedData.setIsSos(true);
 
         MapsInitializer.initialize(this);
         mMapView = (MapView) findViewById(R.id.map_sos);
@@ -342,26 +343,6 @@ public class SOSActivity extends AppCompatActivity implements OnMapReadyCallback
                 + ", " + mSafeHouse.getState() + ", " + mSafeHouse.getPostcode();
         String str = " " + placeName + "( " + dis + ") \n " + address;
 
-
-//        long days = TimeUnit.SECONDS.toDays(duration);
-//        duration -= TimeUnit.DAYS.toSeconds(days);
-//        long hours = TimeUnit.SECONDS.toHours(duration);
-//        duration -= TimeUnit.HOURS.toSeconds(hours);
-//        long minutes = TimeUnit.SECONDS.toMinutes(duration);
-//        duration -= TimeUnit.MINUTES.toSeconds(minutes);
-//        long seconds = duration;
-//        String dur = "";
-//        if (days == 0 && hours == 0 && minutes == 0) {
-//            dur = seconds + "s";
-//        } else if (days == 0 && hours == 0) {
-//            dur = minutes + "mins, " + seconds + "s";
-//        } else  if (days == 0) {
-//            dur = hours + "hours, " + minutes + "mins, " + seconds + "s";
-//        } else {
-//            dur = days + "days, " + hours + "hours, " + minutes + "mins, " + seconds + "s";
-//        }
-//
-//        String str = "Distance: " + dis + ". " + "Duration: " + dur + ".";
         mTextDD.setText(str);
         mTextDD.setVisibility(View.VISIBLE);
     }
@@ -393,6 +374,7 @@ public class SOSActivity extends AppCompatActivity implements OnMapReadyCallback
         } else {
             stopService(intent);
         }
+        SharedData.setIsSos(false);
         super.onDestroy();
     }
 
@@ -412,7 +394,6 @@ public class SOSActivity extends AppCompatActivity implements OnMapReadyCallback
         getHttpTask = null;
         Gson gson = new Gson();
         if (output.length() != 0) {
-//            Type type = new TypeToken<Map<String, String>>(){}.getType();
             mSafeHouse = gson.fromJson(output, SafeHouse.class);
             double lat = mSafeHouse.getLat();
             double lng = mSafeHouse.getLng();
@@ -421,7 +402,7 @@ public class SOSActivity extends AppCompatActivity implements OnMapReadyCallback
                     .position(mDestination)
                     .anchor(0.0f, 1.0f)
                     .title("destination")
-                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ROSE)));
+                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.sh)));
             marker.showInfoWindow();
 
 

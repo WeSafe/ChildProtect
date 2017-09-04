@@ -5,7 +5,7 @@
         <item
             android:id="@+id/nav_map"
             android:icon="@drawable/ic_location_on_black_24dp"
-            android:title="My kid's Location" />
+            android:title="Find your friend" />
         <!--<item-->
             <!--android:id="@+id/nav_camera"-->
             <!--android:icon="@drawable/ic_menu_camera"-->

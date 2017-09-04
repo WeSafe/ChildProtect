@@ -7,6 +7,10 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CALL_PHONE" />
 
+    <uses-feature
+        android:name="android.hardware.sensor.accelerometer"
+        android:required="true" />
+
     <application
         android:allowBackup="true"
         android:debuggable="true"
@@ -91,8 +95,19 @@
         <activity
             android:name=".RouteGeoActivity"
             android:theme="@style/AppTheme.NoActionBar" />
+        <activity android:name=".SOSActivity" />
+
+        <receiver android:name=".receiver.ShakeReceiver">
+            <intent-filter>
+                <action android:name="shake.detector" />
+            </intent-filter>
+        </receiver>
+
         <activity
-            android:name=".SOSActivity"></activity>
+            android:name=".SplashActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+
+        </activity>
     </application>
 
 </manifest>

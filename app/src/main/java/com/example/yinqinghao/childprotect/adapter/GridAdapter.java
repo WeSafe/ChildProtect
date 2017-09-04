@@ -71,7 +71,7 @@ public class GridAdapter extends BaseAdapter {
             } else {
                 Zone zone = mZones.get(position);
                 textView.setText(zone.getDes());
-                imageView.setImageResource(zone.getStatus().equals("safe") ? R.drawable.sz : R.drawable.da);
+                imageView.setImageResource(zone.getStatus().equals("safe") ? R.drawable.safe : R.drawable.danger);
             }
         } else {
             grid = (View) convertView;

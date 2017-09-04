@@ -22,6 +22,7 @@ import com.dd.processbutton.FlatButton;
 import com.example.yinqinghao.childprotect.asyncTask.GetJsonTask;
 import com.example.yinqinghao.childprotect.asyncTask.GetLocationTask;
 import com.example.yinqinghao.childprotect.entity.Route;
+import com.example.yinqinghao.childprotect.entity.SharedData;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
@@ -91,6 +92,7 @@ public class AddRouteActivity extends AppCompatActivity implements OnMapReadyCal
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_route);
         setTitle("Route");
+        SharedData.pushContext(this);
 
         MapsInitializer.initialize(this);
         mMapView = (MapView) findViewById(R.id.map_add_route);
@@ -487,5 +489,11 @@ public class AddRouteActivity extends AppCompatActivity implements OnMapReadyCal
             getMenuInflater().inflate(R.menu.start, menu);
         }
         return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    protected void onDestroy() {
+        SharedData.popContext();
+        super.onDestroy();
     }
 }

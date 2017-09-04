@@ -89,6 +89,7 @@ public class RouteGeoActivity extends AppCompatActivity implements OnMapReadyCal
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_route_geo);
+        SharedData.pushContext(this);
 
         MapsInitializer.initialize(this);
         mMapView = (MapView) findViewById(R.id.map_routeGeo);
@@ -126,6 +127,7 @@ public class RouteGeoActivity extends AppCompatActivity implements OnMapReadyCal
             @Override
             public void onClick(View v) {
                 finish();
+//                SharedData.setmContext(get);
             }
         });
         mBtnStart.setOnClickListener(mBtnStartOnclickListener);
@@ -205,7 +207,7 @@ public class RouteGeoActivity extends AppCompatActivity implements OnMapReadyCal
 
     private void popupTime(final long l) {
         new SimpleDialog.Builder(RouteGeoActivity.this)
-                .setTitle("Do you want 10 more mins?", true)
+                .setTitle("Do you want to add 10 more mins?", true)
                 .onConfirm(new SimpleDialog.BtnCallback() {
                     @Override
                     public void onClick(@NonNull SimpleDialog dialog, @NonNull SimpleDialog.BtnAction which) {
@@ -253,7 +255,7 @@ public class RouteGeoActivity extends AppCompatActivity implements OnMapReadyCal
 
     private void popupReachMessage () {
         new SimpleDialog.Builder(RouteGeoActivity.this)
-                .setTitle("Do you want to send a reached message?", true)
+                .setTitle("Do you want to notify that you have reached the destination?", true)
                 .onConfirm(new SimpleDialog.BtnCallback() {
                     @Override
                     public void onClick(@NonNull SimpleDialog dialog, @NonNull SimpleDialog.BtnAction which) {
@@ -446,6 +448,7 @@ public class RouteGeoActivity extends AppCompatActivity implements OnMapReadyCal
         if (timer != null) {
             timer.cancel();
         }
+        SharedData.popContext();
         super.onDestroy();
     }
 }

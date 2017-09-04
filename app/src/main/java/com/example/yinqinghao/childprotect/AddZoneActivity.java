@@ -80,6 +80,7 @@ public class AddZoneActivity extends AppCompatActivity implements OnMapReadyCall
         setContentView(R.layout.activity_add_zone);
         setConfirmListener();
         setOnCheckedChangeListener();
+        SharedData.pushContext(this);
 
         MapsInitializer.initialize(this);
         mMapView = (MapView) findViewById(R.id.map_add_zone);
@@ -387,5 +388,11 @@ public class AddZoneActivity extends AppCompatActivity implements OnMapReadyCall
             mRadiusMarker.setPosition(toRadiusLatLng(mCenter, mRadiusMeters));
 
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        SharedData.popContext();
+        super.onDestroy();
     }
 }
