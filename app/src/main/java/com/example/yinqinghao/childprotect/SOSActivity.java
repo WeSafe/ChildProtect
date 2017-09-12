@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Geocoder;
 import android.location.Location;
 import android.net.Uri;
@@ -64,17 +65,19 @@ import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class SOSActivity extends AppCompatActivity implements OnMapReadyCallback,
-        GetLocationTask.LocationResponse, GetJsonTask.AsyncResponse, GetJsonHttpTask.AsyncResponse{
+        GetLocationTask.LocationResponse, GetJsonTask.AsyncResponse, GetJsonHttpTask.AsyncResponse,
+        GoogleMap.OnMarkerClickListener{
 
     private final String BASE_GOOGLE_ROUTE_URL = "https://maps.googleapis.com/maps/api/directions/json?";
 //    private final String BASE_MY_SERVER_URL = "http://118.138.189.107:8080/ieWebServices/rest/sh/getNearestSafeHouse";
-    private final String BASE_MY_SERVER_URL = "http://118.139.77.223:8080/ieWebServices/rest/sh/getNearestSafeHouse";
+    private final String BASE_MY_SERVER_URL = "http://118.139.71.235:8080/ieWebServices/rest/sh/getNearestSafeHouse";
 
     private GoogleMap mMap;
     private FirebaseDatabase mDb;
@@ -89,6 +92,7 @@ public class SOSActivity extends AppCompatActivity implements OnMapReadyCallback
     private GetJsonHttpTask getHttpTask;
 
     private Polyline mRouteLine;
+    private List<Polyline> mRouteLines;
     private Marker mMyMarker;
 
     private ValueEventListener mLocationValueListener;
@@ -105,7 +109,10 @@ public class SOSActivity extends AppCompatActivity implements OnMapReadyCallback
     private List<String> mParentTokens;
     private LatLng mDestination;
     private LatLng mLatlng;
-    private SafeHouse mSafeHouse;
+//    private SafeHouse mSafeHouse;
+    private List<SafeHouse> mSafeHouses;
+    private Map<Marker, SafeHouse> mMarkersMap;
+    private int k = 2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -131,6 +138,11 @@ public class SOSActivity extends AppCompatActivity implements OnMapReadyCallback
         SharedPreferences sp = getSharedPreferences("ID", Context.MODE_PRIVATE);
         mMyId = sp.getString("uid", null);
         mGid = sp.getString("currentGid", null);
+
+        mSafeHouses = new ArrayList<>();
+        mRouteLines = new ArrayList<>();
+        mMarkersMap = new HashMap<>();
+
         initListener();
         getMyLocation();
         showSnackBar();
@@ -190,30 +202,30 @@ public class SOSActivity extends AppCompatActivity implements OnMapReadyCallback
     }
 
     private void initListener() {
-        mLocationValueListener = new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists()) {
-                    LocationData locationData = null;
-                    for (DataSnapshot ds : dataSnapshot.getChildren()) {
-                        locationData = ds.getValue(LocationData.class);
-                    }
-                    if (locationData == null) return;
-                    if (mMyMarker != null)
-                        mMyMarker.remove();
-                    LatLng myLatlng = new LatLng(locationData.getLat(), locationData.getLng());
-                    mMyMarker = mMap.addMarker(new MarkerOptions()
-                            .position(myLatlng)
-                            .title("my location"));
-                    mMyMarker.showInfoWindow();
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        };
+//        mLocationValueListener = new ValueEventListener() {
+//            @Override
+//            public void onDataChange(DataSnapshot dataSnapshot) {
+//                if (dataSnapshot.exists()) {
+//                    LocationData locationData = null;
+//                    for (DataSnapshot ds : dataSnapshot.getChildren()) {
+//                        locationData = ds.getValue(LocationData.class);
+//                    }
+//                    if (locationData == null) return;
+//                    if (mMyMarker != null)
+//                        mMyMarker.remove();
+//                    LatLng myLatlng = new LatLng(locationData.getLat(), locationData.getLng());
+//                    mMyMarker = mMap.addMarker(new MarkerOptions()
+//                            .position(myLatlng)
+//                            .title("my location"));
+//                    mMyMarker.showInfoWindow();
+//                }
+//            }
+//
+//            @Override
+//            public void onCancelled(DatabaseError databaseError) {
+//
+//            }
+//        };
 
         mParentTokenListener = new ValueEventListener() {
             @Override
@@ -276,12 +288,12 @@ public class SOSActivity extends AppCompatActivity implements OnMapReadyCallback
         if (!SharedData.isStartedService()) {
             Intent intent = new Intent(this, LocationService.class);
             startService(intent);
-            DatabaseReference refMe = mDb.getReference("userInfo")
-                    .child(mAuth.getCurrentUser().getUid());
-            com.google.firebase.database.Query queryLocation = refMe
-                    .child("locationDatas").child(mTodayTime + "").orderByKey()
-                    .limitToLast(1);
-            queryLocation.addValueEventListener(mLocationValueListener);
+//            DatabaseReference refMe = mDb.getReference("userInfo")
+//                    .child(mAuth.getCurrentUser().getUid());
+//            com.google.firebase.database.Query queryLocation = refMe
+//                    .child("locationDatas").child(mTodayTime + "").orderByKey()
+//                    .limitToLast(1);
+//            queryLocation.addValueEventListener(mLocationValueListener);
         }
     }
 
@@ -289,6 +301,13 @@ public class SOSActivity extends AppCompatActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         if (googleMap != null) {
             mMap = googleMap;
+            try {
+                mMap.setMyLocationEnabled(true);
+            } catch (SecurityException ex) {
+                ex.printStackTrace();
+            }
+            mMap.setPadding(0,80,0,0);
+            mMap.setOnMarkerClickListener(this);
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(-37.86705, 145.026),12));
             locationTask = new GetLocationTask(this,this,2);
             locationTask.execute();
@@ -321,8 +340,12 @@ public class SOSActivity extends AppCompatActivity implements OnMapReadyCallback
                 String points = polyline.get("points").getAsString();
                 List<LatLng> locations = PolyUtil.decode(points);
                 mRouteLine = mMap.addPolyline(new PolylineOptions().addAll(locations));
-//                showDD((double)dis, dur);
-                showDD((double)dis);
+                mRouteLines.add(mRouteLine);
+                mSafeHouses.get(k).setDis((double)dis);
+                mSafeHouses.get(k--).setPolyline(mRouteLine);
+                if (k == -1) {
+                    setCurrentRoute(mSafeHouses.get(0));
+                }
             } else {
                 Toast.makeText(this, "Can't get the route, please adjust the start/end/waypoint location",
                         Toast.LENGTH_SHORT).show();
@@ -330,7 +353,23 @@ public class SOSActivity extends AppCompatActivity implements OnMapReadyCallback
         }
     }
 
-    private void showDD(double distance) {
+    private void setCurrentRoute(SafeHouse sh) {
+        double lat = sh.getLat();
+        double lng = sh.getLng();
+        mDestination = new LatLng(lat, lng);
+        showDD(sh, sh.getDis());
+        for (Polyline p : mRouteLines) {
+            p.setColor(Color.BLACK);
+            p.setWidth(10);
+        }
+        Polyline polyline = sh.getPolyline();
+        polyline.setColor(Color.CYAN);
+        polyline.setWidth(15);
+
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(mDestination,15));
+    }
+
+    private void showDD(SafeHouse sh, double distance) {
         String dis = "";
         if (distance < 1000) {
             dis = distance + "m";
@@ -338,9 +377,9 @@ public class SOSActivity extends AppCompatActivity implements OnMapReadyCallback
             dis = (distance / 1000) + "km";
         }
 
-        String placeName = mSafeHouse.getPlaceName();
-        String address = mSafeHouse.getStreetNum() + " " + mSafeHouse.getRoad() + " " + mSafeHouse.getRoadType()
-                + ", " + mSafeHouse.getState() + ", " + mSafeHouse.getPostcode();
+        String placeName = sh.getPlaceName();
+        String address = sh.getStreetNum() + " " + sh.getRoad() + " " + sh.getRoadType()
+                + ", " + sh.getState() + ", " + sh.getPostcode();
         String str = " " + placeName + "( " + dis + ") \n " + address;
 
         mTextDD.setText(str);
@@ -355,14 +394,15 @@ public class SOSActivity extends AppCompatActivity implements OnMapReadyCallback
                 mLatlng = new LatLng(location.getLatitude(), location.getLongitude());
                 getDestiantion(mLatlng);
             }
-            if (mMyMarker != null)
-                mMyMarker.remove();
-            mMyMarker = mMap.addMarker(new MarkerOptions()
-                    .position(new LatLng(location.getLatitude(), location.getLongitude()))
-                    .anchor(0.0f, 1.0f)
-                    .title("me"));
-            mMyMarker.showInfoWindow();
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mMyMarker.getPosition(),15));
+//            if (mMyMarker != null)
+//                mMyMarker.remove();
+//            mMyMarker = mMap.addMarker(new MarkerOptions()
+//                    .position(new LatLng(location.getLatitude(), location.getLongitude()))
+//                    .anchor(0.0f, 1.0f)
+//                    .title("me"));
+//            mMyMarker.showInfoWindow();
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
+                    new LatLng(location.getLatitude(), location.getLongitude()),15));
         }
     }
 
@@ -394,35 +434,38 @@ public class SOSActivity extends AppCompatActivity implements OnMapReadyCallback
         getHttpTask = null;
         Gson gson = new Gson();
         if (output.length() != 0) {
-            mSafeHouse = gson.fromJson(output, SafeHouse.class);
-            double lat = mSafeHouse.getLat();
-            double lng = mSafeHouse.getLng();
-            mDestination = new LatLng(lat, lng);
-            Marker marker = mMap.addMarker(new MarkerOptions()
-                    .position(mDestination)
-                    .anchor(0.0f, 1.0f)
-                    .title("destination")
-                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.sh)));
-            marker.showInfoWindow();
+            Type listType = new TypeToken<List<SafeHouse>>(){}.getType();
+            mSafeHouses = gson.fromJson(output, listType);
+            for (int i = mSafeHouses.size()-1; i >=0; i--) {
+                SafeHouse sh = mSafeHouses.get(i);
+                double lat = sh.getLat();
+                double lng = sh.getLng();
+                mDestination = new LatLng(lat, lng);
+                Marker marker = mMap.addMarker(new MarkerOptions()
+                        .position(mDestination)
+                        .anchor(0.0f, 1.0f)
+                        .title(sh.getPlaceName())
+                        .icon(BitmapDescriptorFactory.fromResource(R.drawable.sh)));
+                marker.showInfoWindow();
+                mMarkersMap.put(marker, sh);
+                String key = getString(R.string.GOOGLE_DIRECTION_API_KEY);
+                final LatLng startLocation = mLatlng;
+                final LatLng endLocation = mDestination;
+                String origin = startLocation.latitude + "," + startLocation.longitude;
+                String destination = endLocation.latitude + "," + endLocation.longitude;
+                String parameters = "origin=" + origin + "&destination=" + destination +"&mode=walking&key=" + key;
+                getJsonTask = new GetJsonTask(this);
+                getJsonTask.execute(BASE_GOOGLE_ROUTE_URL, parameters);
+                mAddress = getAddress(startLocation);
+            }
 
-
-
-            String key = getString(R.string.GOOGLE_DIRECTION_API_KEY);
-            final LatLng startLocation = mLatlng;
-            final LatLng endLocation = mDestination;
-            String origin = startLocation.latitude + "," + startLocation.longitude;
-            String destination = endLocation.latitude + "," + endLocation.longitude;
-            String parameters = "origin=" + origin + "&destination=" + destination +"&mode=walking&key=" + key;
-            getJsonTask = new GetJsonTask(this);
-            getJsonTask.execute(BASE_GOOGLE_ROUTE_URL, parameters);
-            mAddress = getAddress(startLocation);
             sendNotification();
             isFirstTime = false;
 
             mNavigationOnClickListener = new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    String uri = String.format(Locale.ENGLISH, "http://maps.google.com/maps?&daddr=%f,%f", endLocation.latitude, endLocation.longitude);
+                    String uri = String.format(Locale.ENGLISH, "http://maps.google.com/maps?&daddr=%f,%f", mDestination.latitude, mDestination.longitude);
                     Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
                     intent.setClassName("com.google.android.apps.maps", "com.google.android.maps.MapsActivity");
                     try
@@ -486,5 +529,12 @@ public class SOSActivity extends AppCompatActivity implements OnMapReadyCallback
             // other 'case' lines to check for other
             // permissions this app might request
         }
+    }
+
+    @Override
+    public boolean onMarkerClick(Marker marker) {
+        SafeHouse sh = mMarkersMap.get(marker);
+        setCurrentRoute(sh);
+        return false;
     }
 }

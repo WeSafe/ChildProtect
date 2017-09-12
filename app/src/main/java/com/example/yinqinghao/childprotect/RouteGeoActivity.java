@@ -65,7 +65,7 @@ public class RouteGeoActivity extends AppCompatActivity implements OnMapReadyCal
     private FirebaseAuth mAuth;
 
     private Polyline mRouteLine;
-    private Marker mMe;
+//    private Marker mMe;
     private String mMyId;
     private Person mUser;
     private String mGid;
@@ -289,16 +289,16 @@ public class RouteGeoActivity extends AppCompatActivity implements OnMapReadyCal
                         locationData = ds.getValue(LocationData.class);
                     }
                     if (locationData == null) return;
-                    if (mMe != null)
-                        mMe.remove();
+//                    if (mMe != null)
+//                        mMe.remove();
                     LatLng myLatlng = new LatLng(locationData.getLat(), locationData.getLng());
                     if (!reminded && getDistance(mDestination, myLatlng) <  10 ) {
                         popupReach();
                     }
-                    mMe = mMap.addMarker(new MarkerOptions()
-                            .position(myLatlng)
-                            .title("my location"));
-                    mMe.showInfoWindow();
+//                    mMe = mMap.addMarker(new MarkerOptions()
+//                            .position(myLatlng)
+//                            .title("my location"));
+//                    mMe.showInfoWindow();
                 }
             }
 
@@ -399,6 +399,12 @@ public class RouteGeoActivity extends AppCompatActivity implements OnMapReadyCal
         if (googleMap == null)
             return;
         mMap = googleMap;
+        try {
+            mMap.setMyLocationEnabled(true);
+        } catch (SecurityException ex) {
+            ex.printStackTrace();
+        }
+        mMap.setPadding(0,80,0,0);
         Intent intent = getIntent();
         mRoute = intent.getParcelableExtra("route");
         String points = mRoute.getPoints();
@@ -433,6 +439,30 @@ public class RouteGeoActivity extends AppCompatActivity implements OnMapReadyCal
 
         String str = "Estimated time: " + dur + ".";
         return str;
+    }
+
+    @Override
+    public void onResume() {
+        if (mMap != null && !mMap.isMyLocationEnabled()) {
+            try {
+                mMap.setMyLocationEnabled(true);
+            } catch (SecurityException ex) {
+
+            }
+        }
+        super.onResume();
+    }
+
+    @Override
+    public void onPause() {
+        if (mMap != null && mMap.isMyLocationEnabled()) {
+            try {
+                mMap.setMyLocationEnabled(false);
+            } catch (SecurityException ex) {
+
+            }
+        }
+        super.onPause();
     }
 
     @Override

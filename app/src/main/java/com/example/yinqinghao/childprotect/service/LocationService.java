@@ -32,7 +32,7 @@ public class LocationService extends Service {
                 this).setSmallIcon(R.drawable.ic_android_black_24dp)
                 .setContentTitle("Uploading your location data")
                 .setPriority(Notification.PRIORITY_MAX)
-                .setContentText("ChildProtect")
+                .setContentText("WeSafe")
                 .setOngoing(true);
         notification = bBuilder.build();
         notification.flags |= Notification.FLAG_FOREGROUND_SERVICE;

@@ -216,14 +216,14 @@ public class AddZoneActivity extends AppCompatActivity implements OnMapReadyCall
     }
 
     private void showTutorial(View view, View view2) {
-        if (SharedData.isShowTutorial2()) {
-            SpotlightSequence.getInstance(this,null)
-                    .addSpotlight(view,
-                            "Center of The Area", "Long Click to drag the center of the area.", SharedData.getRandomStr())
-                    .addSpotlight(view2,
-                            "Radius of The Area", "Long Click to adjust the radius of the area", SharedData.getRandomStr())
-                    .startSequence();
-        }
+//        if (SharedData.isShowTutorial2()) {
+//            SpotlightSequence.getInstance(this,null)
+//                    .addSpotlight(view,
+//                            "Center of The Area", "Long Click to drag the center of the area.", SharedData.getRandomStr())
+//                    .addSpotlight(view2,
+//                            "Radius of The Area", "Long Click to adjust the radius of the area", SharedData.getRandomStr())
+//                    .startSequence();
+//        }
     }
 
     private void drawCircle(LatLng latLng, double radius, int strokeColor, int fillColor) {

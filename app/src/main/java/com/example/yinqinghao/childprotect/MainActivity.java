@@ -157,12 +157,12 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void showTutorial(View view) {
-        if (SharedData.isShowTutorial3()) {
-            SpotlightSequence.getInstance(this,null)
-                    .addSpotlight(view,
-                            "SOS", "Shake your phone 3 times or click it to get help", SharedData.getRandomStr())
-                    .startSequence();
-        }
+//        if (SharedData.isShowTutorial3()) {
+//            SpotlightSequence.getInstance(this,null)
+//                    .addSpotlight(view,
+//                            "SOS", "Shake your phone 3 times or click it to get help", SharedData.getRandomStr())
+//                    .startSequence();
+//        }
     }
 
     @Override

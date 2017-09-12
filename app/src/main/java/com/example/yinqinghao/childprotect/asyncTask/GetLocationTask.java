@@ -70,12 +70,12 @@ public class GetLocationTask extends AsyncTask<String, Void, Location> {
         myLocationListener = new MyLocationListener();
     }
 
-    public static GetLocationTask start(GetLocationTask.LocationResponse delegate, Context activity) {
-        if (getLocationTask != null) return null;
-        getLocationTask = new GetLocationTask(delegate,activity,1);
-        getLocationTask.execute();
-        return getLocationTask;
-    }
+//    public static GetLocationTask start(GetLocationTask.LocationResponse delegate, Context activity) {
+//        if (getLocationTask != null) return null;
+//        getLocationTask = new GetLocationTask(delegate,activity,1);
+//        getLocationTask.execute();
+//        return getLocationTask;
+//    }
 
     @Override
     protected Location doInBackground(String... params) {
@@ -96,7 +96,7 @@ public class GetLocationTask extends AsyncTask<String, Void, Location> {
         }
 //        lo =  new Location("");
 //        lo.setLatitude(-37.87705);
-//        lo.setLongitude(145.026);
+//        lo.setLongitude(145.016);
         return lo;
     }
 
@@ -164,17 +164,7 @@ public class GetLocationTask extends AsyncTask<String, Void, Location> {
             removeListener();
             delegate.locationProcessFinish(location);
             latitude = 0;
-        } else {
-            getLocationTask = null;
-            delegate.locationProcessFinish(location);
-            latitude = 0;
-            start(delegate,context);
         }
-    }
-
-    public void stop() {
-        removeListener();
-        getLocationTask = null;
     }
 
     public void removeListener() {

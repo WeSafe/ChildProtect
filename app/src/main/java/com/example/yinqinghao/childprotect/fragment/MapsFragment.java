@@ -46,7 +46,9 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.MapsInitializer;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.UiSettings;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
@@ -75,6 +77,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 import java.util.TreeMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -108,7 +111,9 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
     private Query myLocationQuery;
 
     private Handler mUiHandler = new Handler();
+    private Handler mRouteHandler;
 
+    private Stack<Runnable> mHisCallbacks;
     private List<String> mGroupIds;
 //    private List<Group> mGroups;
     private List<String> mGroupNames;
@@ -116,7 +121,7 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
     private Group mCurrentGroup;
     private Person mMe;
     private String uid;
-    private MarkerItem mMyMarkerItem;
+//    private MarkerItem mMyMarkerItem;
     private Map<String, Person> mFriends;
     private Map<String, MarkerItem> mFriendMarkerItems;
     private List<Circle> mZones;
@@ -162,8 +167,8 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
             mFriendMarkerItems = new HashMap<>();
             mZones = new ArrayList<>();
             mCenters = new ArrayList<>();
-//            mGroups = new ArrayList<>();
             mGroupNames = new ArrayList<>();
+            mHisCallbacks = new Stack<>();
 
             getFamilyIds();
             initListener();
@@ -185,7 +190,6 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
         if (groupIds != null) {
             Type listType = new TypeToken<List<String>>(){}.getType();
             mGroupIds = new Gson().fromJson(groupIds, listType);
-//            setmCurrentGid(0);
         }
         uid = sp.getString("uid", null);
     }
@@ -251,7 +255,7 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
     private void drawRoute(Map<String, LocationData> locationDatas) {
         removeLocationListener();
         TreeMap<String, LocationData> dataTreeMap = Person.sortLocationsAESC(locationDatas);
-        Handler routeHandler = new Handler();
+        mRouteHandler = new Handler();
         final PolylineOptions routeOption = new PolylineOptions();
         Object [] locations = dataTreeMap.values().toArray();
         long delay = 800;
@@ -281,8 +285,7 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
         for (final Object o: locations) {
             final LocationData l = (LocationData) o;
             if (lat != l.getLat() || lng != l.getLng()) {
-
-                routeHandler.postDelayed(new Runnable() {
+                Runnable r = new Runnable() {
                     @Override
                     public void run() {
                         LatLng camera = new LatLng(l.getLat(), l.getLng());
@@ -291,7 +294,10 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
                         mLines.add(polyline);
                         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(camera, 15));
                     }
-                }, delay);
+                };
+
+                mHisCallbacks.add(r);
+                mRouteHandler.postDelayed(r, delay);
                 delay += 800;
             }
             lat = l.getLat();
@@ -320,6 +326,7 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
         mButtenRealTime.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                stopHistroyRoute();
                 mMap.clear();
                 mClusterManager.clearItems();
                 mTextDate.setVisibility(View.GONE);
@@ -336,7 +343,7 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
                 SharedData.setStartedService(true);
                 mButtonUploadLocation.hide(false);
                 mButtonPause.show(false);
-                updateMyLocationMarker();
+//                updateMyLocationMarker();
                 Toast.makeText(getActivity(), "Uploading your location now.", Toast.LENGTH_SHORT).show();
             }
         });
@@ -357,15 +364,24 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
         showFab();
     }
 
-    private void updateMyLocationMarker() {
-        myLocationQuery = mDb.getReference("userInfo")
-                .child(uid)
-                .child("locationDatas")
-                .child(mTodayTime+"")
-                .orderByKey()
-                .limitToLast(1);
-        myLocationQuery.addValueEventListener(myLocationListener);
+    private void stopHistroyRoute() {
+        while (mHisCallbacks!= null && mHisCallbacks.size() != 0) {
+            Runnable r = mHisCallbacks.pop();
+            if (mRouteHandler != null) {
+                mRouteHandler.removeCallbacks(r);
+            }
+        }
     }
+
+//    private void updateMyLocationMarker() {
+//        myLocationQuery = mDb.getReference("userInfo")
+//                .child(uid)
+//                .child("locationDatas")
+//                .child(mTodayTime+"")
+//                .orderByKey()
+//                .limitToLast(1);
+//        myLocationQuery.addValueEventListener(myLocationListener);
+//    }
 
     private void removeMyLocationMarker() {
         if (myLocationQuery != null) {
@@ -409,26 +425,26 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
     private void initListener() {
         mDb = FirebaseDatabase.getInstance();
 
-        myLocationListener = new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (isFirst) {
-                    isFirst = false;
-                    return;
-                }
-                if (dataSnapshot.exists()) {
-                    for (DataSnapshot ds : dataSnapshot.getChildren()) {
-                        LocationData locationData = ds.getValue(LocationData.class);
-                        setmMyMarkerItem(new LatLng(locationData.getLat(),locationData.getLng()));
-                    }
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        };
+//        myLocationListener = new ValueEventListener() {
+//            @Override
+//            public void onDataChange(DataSnapshot dataSnapshot) {
+//                if (isFirst) {
+//                    isFirst = false;
+//                    return;
+//                }
+//                if (dataSnapshot.exists()) {
+//                    for (DataSnapshot ds : dataSnapshot.getChildren()) {
+//                        LocationData locationData = ds.getValue(LocationData.class);
+//                        setmMyMarkerItem(new LatLng(locationData.getLat(),locationData.getLng()));
+//                    }
+//                }
+//            }
+//
+//            @Override
+//            public void onCancelled(DatabaseError databaseError) {
+//
+//            }
+//        };
 
         mGroupValueListener = new ValueEventListener() {
             @Override
@@ -453,6 +469,7 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
                             mMap.clear();
                             mClusterManager.clearItems();
                             markMyLocation();
+//                            mMap.mylo
                             setmCurrentGid(position);
                             getChildLocation();
                         }
@@ -743,12 +760,17 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+//                    try {
+//                        if (locationTask == null) {
+//                            locationTask = new GetLocationTask(this, getActivity(), 4);
+//                        }
+//                        locationTask.execute();
+//                    } catch (IllegalStateException ex) {
+//
+//                    }
                     try {
-                        if (locationTask == null) {
-                            locationTask = new GetLocationTask(this, getActivity(), 4);
-                        }
-                        locationTask.execute();
-                    } catch (IllegalStateException ex) {
+                        mMap.setMyLocationEnabled(true);
+                    } catch (SecurityException ex) {
 
                     }
                 } else
@@ -769,12 +791,15 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+        mMap.setMyLocationEnabled(true);
+        mMap.getUiSettings().setMyLocationButtonEnabled(false);
         mMap.getUiSettings().setMapToolbarEnabled(false);
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(-37.8668, 145.016), 13));
         setUpClusterer();
 //        getChildLocation();
 //        locationTask = new GetLocationTask(this, getActivity(), 4);
         checkPermission();
+        markMyLocation();
 //        try {
 //            locationTask.execute();
 //        } catch (IllegalStateException ex) {
@@ -791,36 +816,36 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
     }
 
     private void markMyLocation() {
-        locationTask = new GetLocationTask(this, getActivity(), 4);
+        locationTask = new GetLocationTask(this, getActivity(), 1);
         locationTask.execute();
     }
 
-    @Override
-    public void locationProcessFinish(Location location) {
-        locationTask = null;
-        mLocation = location;
-        if (mLocation == null) {
-            Log.d(TAG, "can't get the location");
-            return;
-        }
-        Location camera = mLocation;
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
-                new LatLng(camera.getLatitude(), camera.getLongitude()), 13));
+//    @Override
+//    public void locationProcessFinish(Location location) {
+//        locationTask = null;
+//        mLocation = location;
+//        if (mLocation == null) {
+//            Log.d(TAG, "can't get the location");
+//            return;
+//        }
+//        Location camera = mLocation;
+//        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
+//                new LatLng(camera.getLatitude(), camera.getLongitude()), 13));
+//
+//        LatLng myLatLng = new LatLng(mLocation.getLatitude(),mLocation.getLongitude());
+//        setmMyMarkerItem(myLatLng);
+//    }
 
-        LatLng myLatLng = new LatLng(mLocation.getLatitude(),mLocation.getLongitude());
-        setmMyMarkerItem(myLatLng);
-    }
-
-    private void setmMyMarkerItem(LatLng myLatLng) {
-        if (mMyMarkerItem != null) {
-            mClusterManager.removeItem(mMyMarkerItem);
-        }
-        mMyMarkerItem = new MarkerItem(myLatLng, "My Location", "");
-        mMyMarkerItem.setmIcon(BitmapDescriptorFactory.defaultMarker(
-                BitmapDescriptorFactory.HUE_AZURE));
-        mClusterManager.addItem(mMyMarkerItem);
-        mClusterManager.cluster();
-    }
+//    private void setmMyMarkerItem(LatLng myLatLng) {
+//        if (mMyMarkerItem != null) {
+//            mClusterManager.removeItem(mMyMarkerItem);
+//        }
+//        mMyMarkerItem = new MarkerItem(myLatLng, "My Location", "");
+//        mMyMarkerItem.setmIcon(BitmapDescriptorFactory.defaultMarker(
+//                BitmapDescriptorFactory.HUE_AZURE));
+//        mClusterManager.addItem(mMyMarkerItem);
+//        mClusterManager.cluster();
+//    }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -840,18 +865,54 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
         super.onActivityResult(requestCode, resultCode, data);
     }
 
+    @Override
+    public void onResume() {
+        if (mMap != null && !mMap.isMyLocationEnabled()) {
+            try {
+                mMap.setMyLocationEnabled(true);
+            } catch (SecurityException ex) {
+
+            }
+        }
+        super.onResume();
+    }
+
+    @Override
+    public void onPause() {
+        if (mMap != null && mMap.isMyLocationEnabled()) {
+            try {
+                mMap.setMyLocationEnabled(false);
+            } catch (SecurityException ex) {
+
+            }
+        }
+        super.onPause();
+    }
+
     private void showTutorial(View view, View view2, View view3, View view4) {
-        if (SharedData.isShowTutorial1()) {
-            SpotlightSequence.getInstance(getActivity(),null)
-                    .addSpotlight(view,
-                            "Real-Time Location", "Click to know the location of friends ", SharedData.getRandomStr())
-                    .addSpotlight(view2,
-                            "History Route", "Click here to see the history route of friends", SharedData.getRandomStr())
-                    .addSpotlight(view3,
-                            "Update Location", "Click here to update your location", SharedData.getRandomStr())
-                    .addSpotlight(view4,
-                            "Friends Groups", "Click here change your friends group", SharedData.getRandomStr())
-                    .startSequence();
+//        if (SharedData.isShowTutorial1()) {
+//            SpotlightSequence.getInstance(getActivity(),null)
+//                    .addSpotlight(view,
+//                            "Real-Time Location", "Click to know the location of friends ", SharedData.getRandomStr())
+//                    .addSpotlight(view2,
+//                            "History Route", "Click here to see the history route of friends", SharedData.getRandomStr())
+//                    .addSpotlight(view3,
+//                            "Update Location", "Click here to update your location", SharedData.getRandomStr())
+//                    .addSpotlight(view4,
+//                            "Friends Groups", "Click here change your friends group", SharedData.getRandomStr())
+//                    .startSequence();
+//        }
+    }
+
+    @Override
+    public void locationProcessFinish(Location location) {
+        locationTask = null;
+        if (location != null) {
+            CameraPosition position = new CameraPosition.Builder()
+                .target(new LatLng(location.getLatitude(),location.getLongitude()))
+                .zoom(13).build();
+
+            mMap.animateCamera(CameraUpdateFactory.newCameraPosition(position));
         }
     }
 }

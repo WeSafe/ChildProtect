@@ -1,5 +1,7 @@
 package com.example.yinqinghao.childprotect.entity;
 
+import com.google.android.gms.maps.model.Polyline;
+
 /**
  * Created by yinqinghao on 2/9/17.
  */
@@ -16,11 +18,13 @@ public class SafeHouse {
     private String placeName;
     private String oType;
     private double lat;
+    private double dis;
+    private Polyline polyline;
 
     public SafeHouse() {
     }
 
-    public SafeHouse(String roadType, double lng, String distance, String road, String streetNum, int postcode, int id, String state, String placeName, String oType, double lat) {
+    public SafeHouse(String roadType, double lng, String distance, String road, String streetNum, int postcode, int id, String state, String placeName, String oType, double lat, double dis, Polyline polyline) {
         this.roadType = roadType;
         this.lng = lng;
         this.distance = distance;
@@ -32,6 +36,8 @@ public class SafeHouse {
         this.placeName = placeName;
         this.oType = oType;
         this.lat = lat;
+        this.dis = dis;
+        this.polyline = polyline;
     }
 
     public String getRoadType() {
@@ -120,5 +126,21 @@ public class SafeHouse {
 
     public void setLat(double lat) {
         this.lat = lat;
+    }
+
+    public double getDis() {
+        return dis;
+    }
+
+    public void setDis(double dis) {
+        this.dis = dis;
+    }
+
+    public Polyline getPolyline() {
+        return polyline;
+    }
+
+    public void setPolyline(Polyline polyline) {
+        this.polyline = polyline;
     }
 }
