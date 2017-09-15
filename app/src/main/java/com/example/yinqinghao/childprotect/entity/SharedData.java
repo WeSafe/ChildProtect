@@ -1,7 +1,10 @@
 package com.example.yinqinghao.childprotect.entity;
 
 import android.content.Context;
+import android.location.Location;
 import android.util.Log;
+
+import com.google.android.gms.maps.model.LatLng;
 
 import java.util.HashMap;
 import java.util.List;
@@ -19,16 +22,16 @@ public class SharedData {
     private static Route route;
     private static boolean onPath = true;
     private static String randomStr;
-    private static boolean showTutorial1 = true;
-    private static boolean showTutorial2 = true;
-    private static boolean showTutorial3 = true;
+    private static boolean showTutorial1 = false;
+    private static boolean showTutorial2 = false;
+    private static boolean showTutorial3 = false;
     private static boolean isShown = false;
     private static boolean isSos = false;
     private static boolean isSplashed = false;
+    private static LatLng lastLatLng;
+    private static double distance = 0;
+    private static long time = 0;
     private static Stack<Context> mContexts = new Stack<>();
-//    private static Map<String, List<String>> tokens = new HashMap<>();
-//    private static Map<String, Person> user = new HashMap<>();
-//    private static Map<String, Map<String, Zone>> zones = new HashMap<>();
 
     public static boolean isStartedService() {
         return startedService;
@@ -54,42 +57,60 @@ public class SharedData {
         SharedData.onPath = onPath;
     }
 
-//    public static Map<String, List<String>> getTokens() {
-//        return tokens;
-////    }
-//
-//    public static void setTokens(Map<String, List<String>> tokens) {
-//        SharedData.tokens = tokens;
-//    }
-//
-//    public static Map<String, Person> getUser() {
-//        return user;
-//    }
-//
-//    public static void setUser(Map<String, Person> user) {
-//        SharedData.user = user;
-//    }
-//
-//    public static void addUser(String uid, Person me) {
-//        user.put(uid,me);
-//    }
-//
-//    public static void addToken(String gid, List<String> t) {
-//        tokens.put(gid,t);
-//    }
+    public static LatLng getLastLatLng() {
+        return lastLatLng;
+    }
 
-//    public static Map<String, Map<String, Zone>> getZones() {
-//        return zones;
-//    }
+    public static void setLastLatLng(LatLng lastLatLng) {
+        SharedData.lastLatLng = lastLatLng;
+    }
 
-//    public static void setZones(Map<String, Map<String, Zone>> zones) {
-//        SharedData.zones = zones;
-//    }
-//
-//    public static void addZone(String gid, Map<String, Zone> z) {
-//        zones.put(gid,z);
-//    }
+    public static double getDistance() {
+        return distance;
+    }
 
+    public static void setDistance(double distance) {
+        SharedData.distance = distance;
+    }
+
+    public static long getTime() {
+        return time;
+    }
+
+    public static double getSpeed(LatLng curLatLng) {
+        if (lastLatLng == null) {
+            lastLatLng = curLatLng;
+            return 0;
+        }
+        distance = getDistance(lastLatLng, curLatLng);
+        time = 5;
+        lastLatLng = curLatLng;
+        double speed = distance / time;
+        return speed;
+    }
+
+    private static double getDistance(LatLng latLng1, LatLng latLng2) {
+//        double R = 6371000; // for haversine use R = 6372.8 km instead of 6371 km
+        float[] result = new float[1];
+        double lat1 = latLng1.latitude;
+        double lon1 = latLng1.longitude;
+        double lat2 = latLng2.latitude;
+        double lon2 = latLng2.longitude;
+
+        Location.distanceBetween(lat1,lon1, lat2, lon2,result);
+        return  result[0];
+//        double dLat = lat2 - lat1;
+//        double dLon = lon2 - lon1;
+//        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+//                Math.cos(lat1) * Math.cos(lat2) *
+//                        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+//        //double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+//        return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+
+    public static void setTime(long time) {
+        SharedData.time = time;
+    }
 
     public static boolean isShowTutorial1() {
         boolean a = showTutorial1;
@@ -165,8 +186,13 @@ public class SharedData {
         startedService = false;
         route = null;
         onPath = true;
-//        tokens = new HashMap<>();
-//        user = new HashMap<>();
-//        zones = new HashMap<>();
+        clearSpeedData();
     }
+
+    public static void clearSpeedData() {
+        lastLatLng = null;
+        distance = 0;
+        time = 0;
+    }
+
 }

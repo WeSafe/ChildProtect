@@ -104,8 +104,10 @@ public class RouteAlarmReceiver  extends BroadcastReceiver
             return;
         }
         String today = Person.getDatetime() + "";
+        LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+        double speed = SharedData.getSpeed(latLng);
         LocationData locationData = new LocationData(new Date(),
-                location.getLatitude(),location.getLongitude(), mBatteryLevel, mMyId);
+                location.getLatitude(),location.getLongitude(), mBatteryLevel, mMyId, speed);
         DatabaseReference refLocation = mDb.getReference("userInfo")
                 .child(mMyId)
                 .child("locationDatas")
@@ -148,7 +150,7 @@ public class RouteAlarmReceiver  extends BroadcastReceiver
         i.putExtra("uid", childId);
         i.putExtra("currentGid", familyId);
         PendingIntent pi = PendingIntent.getBroadcast(context, 0, i, PendingIntent.FLAG_UPDATE_CURRENT);
-        am.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + (2 * 1000), 1000 * 60, pi);
+        am.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + (2 * 1000), 1000 * 5, pi);
     }
 
     public void cancelAlarm(Context context) {
@@ -188,7 +190,9 @@ public class RouteAlarmReceiver  extends BroadcastReceiver
                     Group g = dataSnapshot.getValue(Group.class);
                     Map<String, String> user = g.getUsers();
                     for (String key: user.keySet()) {
-                        if (!key.equals(mMyId) && !mParentTokens.contains(user.get(key))) {
+                        if (!key.equals(mMyId)
+                                && !mParentTokens.contains(user.get(key))
+                                && !user.get(key).equals("Offline")) {
                             mParentTokens.add(user.get(key));
                         }
                     }

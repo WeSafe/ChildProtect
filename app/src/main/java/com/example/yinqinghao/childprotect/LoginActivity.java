@@ -56,6 +56,7 @@ public class LoginActivity extends AppCompatActivity {
     private EditText mPasswordView;
     private View mProgressView;
     private View mLoginFormView;
+    private TextView mSignUpButton;
 
     private FirebaseAuth mAuth;
     private FirebaseDatabase mDb;
@@ -64,6 +65,7 @@ public class LoginActivity extends AppCompatActivity {
     private ValueEventListener mParentListener;
 
     private static final String TAG = "LoginActivity";
+    private final int SIGNUP_REQUEST = 9999;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,7 +73,7 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
         // Set up the login form.
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
-
+        mSignUpButton = (TextView) findViewById(R.id.txt_register);
         mPasswordView = (EditText) findViewById(R.id.password);
 
         mPasswordView.setOnFocusChangeListener(new View.OnFocusChangeListener() {
@@ -91,6 +93,14 @@ public class LoginActivity extends AppCompatActivity {
                     return true;
                 }
                 return false;
+            }
+        });
+
+        mSignUpButton.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(LoginActivity.this, SignUpActivity.class);
+                startActivityForResult(intent, SIGNUP_REQUEST);
             }
         });
 
@@ -194,7 +204,6 @@ public class LoginActivity extends AppCompatActivity {
                     //get parent info
                     Person parent = dataSnapshot.getValue(Person.class);
                     Intent returnIntent = getIntent();
-//                    Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                     returnIntent.putExtra("email", parent.getEmail());
                     returnIntent.putExtra("firstName", parent.getFirstName());
                     returnIntent.putExtra("lastName", parent.getLastName());
@@ -225,19 +234,15 @@ public class LoginActivity extends AppCompatActivity {
                     }
                 }
                 String groupIdsStr = new Gson().toJson(groupIds);
-//                String familyId = ((HashMap<String, String >)dataSnapshot.getValue()).get("familyId");
                 SharedPreferences sp = getSharedPreferences("ID", Context.MODE_PRIVATE);
                 SharedPreferences.Editor eLogin= sp.edit();
                 eLogin.putString("groupIds", groupIdsStr);
                 eLogin.putString("uid", mAuth.getCurrentUser().getUid());
                 eLogin.apply();
 
-
                 DatabaseReference refUserInfo = mDb.getReference("userInfo")
                         .child(uid);
                 refUserInfo.addListenerForSingleValueEvent(mParentListener);
-//                refUserInfo.child("notificationTokens").removeValue();
-//                refUserInfo.child("notificationTokens").child(token).setValue(true);
             }
 
             @Override
@@ -245,6 +250,24 @@ public class LoginActivity extends AppCompatActivity {
 
             }
         };
+    }
+
+    /**
+     * Dispatch incoming result to the correct fragment.
+     *
+     * @param requestCode
+     * @param resultCode
+     * @param data
+     */
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == SIGNUP_REQUEST) {
+            if (resultCode == RESULT_OK) {
+                showProgress(false);
+                setResult(Activity.RESULT_OK, data);
+                finish();
+            }
+        }
     }
 
     private boolean isEmailValid(String email) {

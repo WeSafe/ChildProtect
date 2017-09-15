@@ -26,7 +26,17 @@ import com.example.yinqinghao.childprotect.entity.SharedData;
 import com.example.yinqinghao.childprotect.fragment.MapsFragment;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.wooplr.spotlight.utils.SpotlightSequence;
+
+import java.lang.reflect.Type;
+import java.util.List;
 
 import safety.com.br.android_shake_detector.core.ShakeCallback;
 import safety.com.br.android_shake_detector.core.ShakeDetector;
@@ -47,6 +57,7 @@ public class MainActivity extends AppCompatActivity
 
     private Fragment mMapFragment;
     private FirebaseAuth mAuth;
+    private FirebaseDatabase mDb;
     private FirebaseAuth.AuthStateListener mAuthListener;
 
     private static final String TAG = "MainActivity";
@@ -157,12 +168,12 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void showTutorial(View view) {
-//        if (SharedData.isShowTutorial3()) {
-//            SpotlightSequence.getInstance(this,null)
-//                    .addSpotlight(view,
-//                            "SOS", "Shake your phone 3 times or click it to get help", SharedData.getRandomStr())
-//                    .startSequence();
-//        }
+        if (SharedData.isShowTutorial3()) {
+            SpotlightSequence.getInstance(this,null)
+                    .addSpotlight(view,
+                            "SOS", "Shake your phone 3 times to trigger an alert and find the nearest safe house", SharedData.getRandomStr())
+                    .startSequence();
+        }
     }
 
     @Override
@@ -254,7 +265,24 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void signOut() {
+        mDb = FirebaseDatabase.getInstance();
+        DatabaseReference refGroupId = mDb.getReference("user");
+        String id = mAuth.getCurrentUser().getUid();
         SharedPreferences sp = getSharedPreferences("ID", Context.MODE_PRIVATE);
+        String groupIds = sp.getString("groupIds",null);
+        List<String> gids = null;
+        if (groupIds != null) {
+            Type listType = new TypeToken<List<String>>(){}.getType();
+            gids = new Gson().fromJson(groupIds, listType);
+        }
+        for (String gid: gids) {
+            DatabaseReference refToken = mDb.getReference("group")
+                    .child(gid)
+                    .child("users")
+                    .child(id);
+            refToken.setValue("Offline");
+        }
+
         SharedPreferences.Editor eLogin= sp.edit();
         eLogin.clear();
         eLogin.commit();
@@ -263,7 +291,6 @@ public class MainActivity extends AppCompatActivity
         drawer.closeDrawer(GravityCompat.START);
         mShakeDetector.stopShakeDetector(this);
     }
-
 
     /**
      * get result of other activities

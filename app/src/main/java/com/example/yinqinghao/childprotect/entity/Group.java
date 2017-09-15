@@ -11,14 +11,16 @@ import java.util.Map;
 public class Group {
     private String id;
     private String name;
+    private String userID;
     private Map<String, String> users;
 
     public Group() {
     }
 
-    public Group(String id, String name, Map<String, String> users) {
+    public Group(String id, String name, String userID, Map<String, String> users) {
         this.id = id;
         this.name = name;
+        this.userID = userID;
         this.users = users;
     }
 
@@ -44,5 +46,13 @@ public class Group {
 
     public void setUsers(Map<String, String> users) {
         this.users = users;
+    }
+
+    public String getUserID() {
+        return userID;
+    }
+
+    public void setUserID(String userID) {
+        this.userID = userID;
     }
 }

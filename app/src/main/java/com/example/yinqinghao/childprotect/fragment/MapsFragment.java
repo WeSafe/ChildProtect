@@ -31,12 +31,14 @@ import com.example.yinqinghao.childprotect.Manifest;
 import com.example.yinqinghao.childprotect.asyncTask.GetLocationTask;
 import com.example.yinqinghao.childprotect.R;
 import com.example.yinqinghao.childprotect.clusterMarker.MarkerRender;
+import com.example.yinqinghao.childprotect.clusterMarker.MyInfoWindowAdapter;
 import com.example.yinqinghao.childprotect.entity.Group;
 import com.example.yinqinghao.childprotect.entity.Person;
 import com.example.yinqinghao.childprotect.entity.LocationData;
 import com.example.yinqinghao.childprotect.clusterMarker.MarkerItem;
 import com.example.yinqinghao.childprotect.entity.SharedData;
 import com.example.yinqinghao.childprotect.entity.Zone;
+import com.example.yinqinghao.childprotect.receiver.LocationAlarmReceiver;
 import com.example.yinqinghao.childprotect.service.LocationService;
 import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
@@ -99,6 +101,7 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
     private FloatingActionButton mButtonUploadLocation;
     private FloatingActionButton mButtonPause;
     private TextView mTextDate;
+    private TextView mTextSpeed;
     private View mHisTutor;
     private Spinner mSpinner;
 
@@ -131,6 +134,7 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
     private long mTodayTime;
     private boolean isFirst = true;
     private boolean showTutorial = true;
+    private LocationAlarmReceiver.SpeedListener mSpeedListener;
 
     public MapsFragment() {
         // Required empty public constructor
@@ -162,6 +166,15 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
             mButtenRealTime.hide(false);
             mButtonUploadLocation.hide(false);
             mButtonPause.hide(false);
+            mTextSpeed = (TextView) mView.findViewById(R.id.txt_speed);
+            mSpeedListener = new LocationAlarmReceiver.SpeedListener() {
+                @Override
+                public void postGetSpeed(double speed) {
+                    String s = String.format("%.1f", (speed*3600)/1000) + " km/h";
+                    mTextSpeed.setText(s);
+                }
+            };
+            LocationAlarmReceiver.registerSpeedListener(mSpeedListener);
 
             mTodayTime = Person.getDatetime();
             mFriendMarkerItems = new HashMap<>();
@@ -354,6 +367,7 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
                 Intent i = new Intent(getActivity(), LocationService.class);
                 getActivity().stopService(i);
                 SharedData.setStartedService(false);
+                SharedData.clearSpeedData();
                 mButtonUploadLocation.show(false);
                 mButtonPause.hide(false);
                 removeMyLocationMarker();
@@ -372,7 +386,6 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
             }
         }
     }
-
 //    private void updateMyLocationMarker() {
 //        myLocationQuery = mDb.getReference("userInfo")
 //                .child(uid)
@@ -469,7 +482,6 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
                             mMap.clear();
                             mClusterManager.clearItems();
                             markMyLocation();
-//                            mMap.mylo
                             setmCurrentGid(position);
                             getChildLocation();
                         }
@@ -517,8 +529,11 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
                             mClusterManager.removeItem(childMarker);
                         }
 
+                        String speed = String.format("%.1f", (locationData.getSpeed()*3600)/1000) + " km/h";
+                        String snippet = "Speed: " + speed + "\n" + new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(locationData.getDatetime());
+
                         MarkerItem newMarkerItem = new MarkerItem(new LatLng(locationData.getLat(),locationData.getLng()),
-                                person.getFirstName(), new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(locationData.getDatetime()));
+                                person.getFirstName(), snippet);
                         mClusterManager.addItem(newMarkerItem);
                         mClusterManager.cluster();
                         mFriendMarkerItems.put(childId, newMarkerItem);
@@ -638,7 +653,6 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
 
             }
         };
-
 //        mFidValueListener = new ValueEventListener() {
 //            @Override
 //            public void onDataChange(DataSnapshot dataSnapshot) {
@@ -791,14 +805,15 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+        checkPermission();
         mMap.setMyLocationEnabled(true);
         mMap.getUiSettings().setMyLocationButtonEnabled(false);
         mMap.getUiSettings().setMapToolbarEnabled(false);
+        mMap.setInfoWindowAdapter(new MyInfoWindowAdapter(getActivity()));
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(-37.8668, 145.016), 13));
         setUpClusterer();
 //        getChildLocation();
 //        locationTask = new GetLocationTask(this, getActivity(), 4);
-        checkPermission();
         markMyLocation();
 //        try {
 //            locationTask.execute();
@@ -874,6 +889,11 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
 
             }
         }
+
+        if (SharedData.isStartedService()) {
+            mButtonUploadLocation.hide(false);
+            mButtonPause.show(false);
+        }
         super.onResume();
     }
 
@@ -890,18 +910,18 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
     }
 
     private void showTutorial(View view, View view2, View view3, View view4) {
-//        if (SharedData.isShowTutorial1()) {
-//            SpotlightSequence.getInstance(getActivity(),null)
-//                    .addSpotlight(view,
-//                            "Real-Time Location", "Click to know the location of friends ", SharedData.getRandomStr())
-//                    .addSpotlight(view2,
-//                            "History Route", "Click here to see the history route of friends", SharedData.getRandomStr())
-//                    .addSpotlight(view3,
-//                            "Update Location", "Click here to update your location", SharedData.getRandomStr())
-//                    .addSpotlight(view4,
-//                            "Friends Groups", "Click here change your friends group", SharedData.getRandomStr())
-//                    .startSequence();
-//        }
+        if (SharedData.isShowTutorial1()) {
+            SpotlightSequence.getInstance(getActivity(),null)
+                    .addSpotlight(view,
+                            "Real-Time Location", "See the location of your family and friends ", SharedData.getRandomStr())
+                    .addSpotlight(view2,
+                            "History Route", "Click here to see history route of family and friends", SharedData.getRandomStr())
+                    .addSpotlight(view3,
+                            "Update Location", "Click here to switch on/off location", SharedData.getRandomStr())
+                    .addSpotlight(view4,
+                            "Friends Groups", "Click here to see your social personal safety network of friends and family", SharedData.getRandomStr())
+                    .startSequence();
+        }
     }
 
     @Override

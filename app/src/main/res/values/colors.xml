@@ -16,4 +16,5 @@
     <color name="buttonGreen">#4caf50</color>
     <color name="buttonGreenDark">#087f23</color>
     <color name="splashColor">#79dfef</color>
+    <color name="linkColor" >#0000EE</color>
 </resources>

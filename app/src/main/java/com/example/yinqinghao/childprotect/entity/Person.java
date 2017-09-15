@@ -6,6 +6,7 @@ import android.os.Parcelable;
 import java.text.SimpleDateFormat;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -22,6 +23,12 @@ public class Person extends User {
         super(uid, email, firstName, lastName, phoneNumber, isOnline);
         this.status = status;
         this.locationDatas = locationDatas;
+    }
+
+    public Person(String uid, String email, String firstName, String lastName, long phoneNumber) {
+        super(uid, email, firstName, lastName, phoneNumber, true);
+        this.status = "normal";
+        locationDatas = new HashMap<>();
     }
 
     public Person() {
@@ -82,7 +89,7 @@ public class Person extends User {
     public LocationData getMostRecentLocation() {
         long today = getDatetime();
         String key = today + "";
-        if (locationDatas.containsKey(today+"")) {
+        if (locationDatas != null && locationDatas.containsKey(today+"")) {
             Map<String,LocationData> locations = locationDatas.get(key);
             String keyRecet = sortLocations(locations.keySet());
             return locations.get(keyRecet);
@@ -143,6 +150,9 @@ public class Person extends User {
     }
 
     public Map<String, Map<String, LocationData>> getLocationDatas() {
+        if (locationDatas == null) {
+            locationDatas = new HashMap<>();
+        }
         return locationDatas;
     }
 

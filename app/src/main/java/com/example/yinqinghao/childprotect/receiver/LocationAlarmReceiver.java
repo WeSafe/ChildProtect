@@ -19,6 +19,7 @@ import com.example.yinqinghao.childprotect.entity.LocationData;
 import com.example.yinqinghao.childprotect.entity.Person;
 import com.example.yinqinghao.childprotect.entity.SharedData;
 import com.example.yinqinghao.childprotect.entity.Zone;
+import com.google.android.gms.maps.model.LatLng;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -66,6 +67,20 @@ public class LocationAlarmReceiver extends BroadcastReceiver
         }
     };
 
+    public interface SpeedListener {
+        public void postGetSpeed(double speed);
+    }
+
+    public static SpeedListener speedListener;
+
+    public static void registerSpeedListener(SpeedListener l){
+        speedListener = l;
+    }
+
+    public static void unregisterSpeedListener(){
+        speedListener = null;
+    }
+
     @Override
     public void onReceive(Context context, Intent intent) {
         mContext = context;
@@ -107,7 +122,7 @@ public class LocationAlarmReceiver extends BroadcastReceiver
         i.putExtra("uid", childId);
         i.putExtra("groupIds", familyId);
         PendingIntent pi = PendingIntent.getBroadcast(context, 0, i, PendingIntent.FLAG_UPDATE_CURRENT);
-        am.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + (2 * 1000), 1000 * 60, pi);
+        am.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + (2 * 1000), 1000 * 5, pi);
     }
 
     public void cancelAlarm(Context context) {
@@ -219,8 +234,13 @@ public class LocationAlarmReceiver extends BroadcastReceiver
             return;
         }
         String today = Person.getDatetime() + "";
+        LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+        double speed = SharedData.getSpeed(latLng);
+        if (speedListener != null) {
+            speedListener.postGetSpeed(speed);
+        }
         LocationData locationData = new LocationData(new Date(),
-                location.getLatitude(),location.getLongitude(), mBatteryLevel, mMyId);
+                location.getLatitude(),location.getLongitude(), mBatteryLevel, mMyId, speed);
         DatabaseReference refLocation = mDb.getReference("userInfo")
                 .child(mMyId)
                 .child("locationDatas")

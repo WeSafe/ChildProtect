@@ -14,16 +14,18 @@ public class LocationData {
     private double lng;
     private int batteryStatus;
     private String uid;
+    private double speed;
 
     public LocationData() {
     }
 
-    public LocationData(Date datetime, double lat, double lng, int batteryStatus, String uid) {
+    public LocationData(Date datetime, double lat, double lng, int batteryStatus, String uid, double speed) {
         this.datetime = datetime;
         this.lat = lat;
         this.lng = lng;
         this.batteryStatus = batteryStatus;
         this.uid = uid;
+        this.speed = speed;
     }
 
     public Date getDatetime() {
@@ -65,5 +67,13 @@ public class LocationData {
 
     public void setUid(String uid) {
         this.uid = uid;
+    }
+
+    public double getSpeed() {
+        return speed;
+    }
+
+    public void setSpeed(double speed) {
+        this.speed = speed;
     }
 }

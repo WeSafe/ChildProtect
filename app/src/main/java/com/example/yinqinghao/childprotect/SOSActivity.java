@@ -77,7 +77,7 @@ public class SOSActivity extends AppCompatActivity implements OnMapReadyCallback
 
     private final String BASE_GOOGLE_ROUTE_URL = "https://maps.googleapis.com/maps/api/directions/json?";
 //    private final String BASE_MY_SERVER_URL = "http://118.138.189.107:8080/ieWebServices/rest/sh/getNearestSafeHouse";
-    private final String BASE_MY_SERVER_URL = "http://118.139.71.235:8080/ieWebServices/rest/sh/getNearestSafeHouse";
+    private final String BASE_MY_SERVER_URL = "http://ec2-52-64-239-154.ap-southeast-2.compute.amazonaws.com:8080/safeHouseWebService/webresources/entity.safehouse/getNearestSafeHouse";
 
     private GoogleMap mMap;
     private FirebaseDatabase mDb;
@@ -202,31 +202,6 @@ public class SOSActivity extends AppCompatActivity implements OnMapReadyCallback
     }
 
     private void initListener() {
-//        mLocationValueListener = new ValueEventListener() {
-//            @Override
-//            public void onDataChange(DataSnapshot dataSnapshot) {
-//                if (dataSnapshot.exists()) {
-//                    LocationData locationData = null;
-//                    for (DataSnapshot ds : dataSnapshot.getChildren()) {
-//                        locationData = ds.getValue(LocationData.class);
-//                    }
-//                    if (locationData == null) return;
-//                    if (mMyMarker != null)
-//                        mMyMarker.remove();
-//                    LatLng myLatlng = new LatLng(locationData.getLat(), locationData.getLng());
-//                    mMyMarker = mMap.addMarker(new MarkerOptions()
-//                            .position(myLatlng)
-//                            .title("my location"));
-//                    mMyMarker.showInfoWindow();
-//                }
-//            }
-//
-//            @Override
-//            public void onCancelled(DatabaseError databaseError) {
-//
-//            }
-//        };
-
         mParentTokenListener = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -236,7 +211,9 @@ public class SOSActivity extends AppCompatActivity implements OnMapReadyCallback
                         Group g = ds.getValue(Group.class);
                         Map<String, String> user = g.getUsers();
                         for (String key: user.keySet()) {
-                            if (!key.equals(mMyId) && !mParentTokens.contains(user.get(key))) {
+                            if (!key.equals(mMyId)
+                                    && !mParentTokens.contains(user.get(key))
+                                    && !user.get(key).equals("Offline")) {
                                 mParentTokens.add(user.get(key));
                                 DatabaseReference refNotification = mDb.getReference("notification")
                                         .child(user.get(key));
@@ -416,6 +393,21 @@ public class SOSActivity extends AppCompatActivity implements OnMapReadyCallback
         }
         SharedData.setIsSos(false);
         super.onDestroy();
+    }
+
+    /**
+     * Dispatch onPause() to fragments.
+     */
+    @Override
+    protected void onPause() {
+        Intent intent = new Intent(this, LocationService.class);
+        if (SharedData.isStartedService()) {
+            startService(intent);
+        } else {
+            stopService(intent);
+        }
+        SharedData.setIsSos(false);
+        super.onPause();
     }
 
     @Override

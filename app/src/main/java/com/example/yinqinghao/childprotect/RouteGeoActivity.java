@@ -330,7 +330,9 @@ public class RouteGeoActivity extends AppCompatActivity implements OnMapReadyCal
                     Group g = dataSnapshot.getValue(Group.class);
                     Map<String, String> user = g.getUsers();
                     for (String key: user.keySet()) {
-                        if (!key.equals(mMyId) && !mParentTokens.contains(user.get(key))) {
+                        if (!key.equals(mMyId)
+                                && !mParentTokens.contains(user.get(key))
+                                && !user.get(key).equals("Offline")) {
                             mParentTokens.add(user.get(key));
                             DatabaseReference refNotification = mDb.getReference("notification")
                                     .child(user.get(key));
@@ -462,6 +464,15 @@ public class RouteGeoActivity extends AppCompatActivity implements OnMapReadyCal
 
             }
         }
+
+        Intent intent = new Intent(RouteGeoActivity.this, LocationService.class);
+        if (SharedData.isStartedService()) {
+            startService(intent);
+        } else {
+            stopService(intent);
+        }
+        Intent intent2 = new Intent(RouteGeoActivity.this, RouteService.class);
+        stopService(intent2);
         super.onPause();
     }
 
