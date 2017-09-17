@@ -89,11 +89,10 @@ public class LocationAlarmReceiver extends BroadcastReceiver
         mWl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "");
         mWl.acquire();
         mMyId = intent.getStringExtra("uid");
-        mGidsStr = intent.getStringExtra("groupIds");
+//        mGidsStr = intent.getStringExtra("groupIds");
         getGids();
-        if (mMyId == null || mGidsStr == null) {
-            Intent intent1 = new Intent(context, LoginActivity.class);
-            context.startActivity(intent1);
+        if (mMyId == null ) {
+            Toast.makeText(mContext, "Can't get User id", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -112,8 +111,9 @@ public class LocationAlarmReceiver extends BroadcastReceiver
     }
 
     private void getGids(){
-        Type listType = new TypeToken<List<String>>(){}.getType();
-        mGroupIds = new Gson().fromJson(mGidsStr, listType);
+//        Type listType = new TypeToken<List<String>>(){}.getType();
+//        mGroupIds = new Gson().fromJson(mGidsStr, listType);
+        mGroupIds = SharedData.getmGroupId();
     }
 
     public void setAlarm(Context context, String childId, String familyId) {

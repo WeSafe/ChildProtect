@@ -22,8 +22,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.brouding.simpledialog.SimpleDialog;
+import com.example.yinqinghao.childprotect.entity.Group;
 import com.example.yinqinghao.childprotect.entity.SharedData;
 import com.example.yinqinghao.childprotect.fragment.MapsFragment;
+import com.example.yinqinghao.childprotect.service.LocationService;
+import com.example.yinqinghao.childprotect.service.RouteService;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -45,6 +48,7 @@ import safety.com.br.android_shake_detector.core.ShakeOptions;
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener{
     private static final int ZONE_ACTIVITY = 876;
+    private static final int GROUP_ACTIVITY = 9870;
 
     private DrawerLayout drawer;
     private TextView usernameTextView;
@@ -234,12 +238,17 @@ public class MainActivity extends AppCompatActivity
         FragmentManager fragmentManager = getFragmentManager();
 
         switch (id) {
-            case R.id.nav_map:
-                if (mMapFragment == null) {
-                    mMapFragment = new MapsFragment();
-                }
-                nextFragment = mMapFragment;
-                break;
+//            case R.id.nav_map:
+//                if (mMapFragment == null) {
+//                    mMapFragment = new MapsFragment();
+//                }
+//                nextFragment = mMapFragment;
+//                break;
+            case R.id.nav_group:
+                Intent intentGroup = new Intent(this, GroupsActivity.class);
+                startActivityForResult(intentGroup, GROUP_ACTIVITY);
+                drawer.closeDrawer(GravityCompat.START);
+                return true;
             case R.id.nav_zones:
                 Intent intent = new Intent(this, ZonesActivity.class);
                 startActivityForResult(intent, ZONE_ACTIVITY);
@@ -265,22 +274,22 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void signOut() {
+        Intent intent = new Intent(this, LocationService.class);
+        Intent intent2 = new Intent(this, RouteService.class);
+        stopService(intent);
+        stopService(intent2);
         mDb = FirebaseDatabase.getInstance();
-        DatabaseReference refGroupId = mDb.getReference("user");
         String id = mAuth.getCurrentUser().getUid();
         SharedPreferences sp = getSharedPreferences("ID", Context.MODE_PRIVATE);
-        String groupIds = sp.getString("groupIds",null);
-        List<String> gids = null;
-        if (groupIds != null) {
-            Type listType = new TypeToken<List<String>>(){}.getType();
-            gids = new Gson().fromJson(groupIds, listType);
-        }
-        for (String gid: gids) {
-            DatabaseReference refToken = mDb.getReference("group")
-                    .child(gid)
-                    .child("users")
-                    .child(id);
-            refToken.setValue("Offline");
+        List<String> gids = SharedData.getmGroupId();
+        if (gids != null) {
+            for (String gid: gids) {
+                DatabaseReference refToken = mDb.getReference("group")
+                        .child(gid)
+                        .child("users")
+                        .child(id);
+                refToken.setValue("Offline");
+            }
         }
 
         SharedPreferences.Editor eLogin= sp.edit();
@@ -326,6 +335,12 @@ public class MainActivity extends AppCompatActivity
         }
 
         if (requestCode == ZONE_ACTIVITY
+                && resultCode == RESULT_OK
+                && mMapFragment != null) {
+            mMapFragment.onActivityResult(requestCode,resultCode,data);
+        }
+
+        if (requestCode == GROUP_ACTIVITY
                 && resultCode == RESULT_OK
                 && mMapFragment != null) {
             mMapFragment.onActivityResult(requestCode,resultCode,data);

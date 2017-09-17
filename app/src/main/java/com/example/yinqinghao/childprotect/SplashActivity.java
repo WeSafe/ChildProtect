@@ -16,7 +16,7 @@ public class SplashActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
 
-        CountDownTimer timer = new CountDownTimer(4000, 3000) {
+        CountDownTimer timer = new CountDownTimer(5000, 5000) {
             @Override
             public void onTick(long millisUntilFinished) {
 

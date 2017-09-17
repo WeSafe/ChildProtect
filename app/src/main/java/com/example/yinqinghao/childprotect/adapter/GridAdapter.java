@@ -9,6 +9,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.yinqinghao.childprotect.R;
+import com.example.yinqinghao.childprotect.entity.Group;
+import com.example.yinqinghao.childprotect.entity.Person;
 import com.example.yinqinghao.childprotect.entity.Route;
 import com.example.yinqinghao.childprotect.entity.Zone;
 
@@ -24,7 +26,12 @@ public class GridAdapter extends BaseAdapter {
     private Context mContext;
     private List<Zone> mZones;
     private List<Route> mRoutes;
+    private List<Group> mGroups;
+    private List<Person> mPeople;
+    private String adminId;
     private boolean isRoute = false;
+    private boolean isGroup = false;
+    private boolean isPerson = false;
 
     public GridAdapter(Context mContext, List<Zone> mZones) {
         this.mContext = mContext;
@@ -37,16 +44,45 @@ public class GridAdapter extends BaseAdapter {
         this.isRoute = true;
     }
 
+    public GridAdapter(Context mContext, boolean isGroup, List<Group> mGroups ) {
+        this.mContext = mContext;
+        this.mGroups = mGroups;
+        this.isGroup = isGroup;
+    }
+
+    public GridAdapter(boolean isPerson, Context mContext, List<Person> mPeople, String adminId ) {
+        this.mContext = mContext;
+        this.mPeople = mPeople;
+        this.isPerson = isPerson;
+        this.adminId = adminId;
+    }
+
     @Override
     public int getCount() {
         if (isRoute) {
             return mRoutes.size();
         }
+        if (isGroup) {
+            return mGroups.size();
+        }
+        if (isPerson) {
+            return mPeople.size();
+        }
+
         return mZones.size();
     }
 
     @Override
     public Object getItem(int position) {
+        if (isRoute) {
+            return mRoutes.get(position);
+        }
+        if (isGroup) {
+            return mGroups.get(position);
+        }
+        if (isPerson) {
+            return mPeople.get(position);
+        }
         return mZones.get(position);
     }
 
@@ -68,6 +104,15 @@ public class GridAdapter extends BaseAdapter {
             if (isRoute) {
                 Route route = mRoutes.get(position);
                 textView.setText(route.getDes());
+            } else if (isGroup) {
+                Group group = mGroups.get(position);
+                textView.setText(group.getName());
+                imageView.setImageResource(R.drawable.ic_group_black);
+            } else if (isPerson) {
+                Person person = mPeople.get(position);
+                textView.setText(person.getFirstName() + " " + person.getLastName());
+                imageView.setImageResource(adminId.equals(person.getUid())
+                        ? R.drawable.ic_android_black_24dp : R.drawable.ic_person_black);
             } else {
                 Zone zone = mZones.get(position);
                 textView.setText(zone.getDes());

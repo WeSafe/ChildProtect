@@ -194,4 +194,11 @@ public class RoutesActivity extends AppCompatActivity {
                 .setBtnCancelShowTime(30000)
                 .show();
     }
+
+
+    @Override
+    protected void onDestroy() {
+        SharedData.popContext();
+        super.onDestroy();
+    }
 }

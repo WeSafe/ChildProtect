@@ -207,6 +207,10 @@ public class LoginActivity extends AppCompatActivity {
                     returnIntent.putExtra("email", parent.getEmail());
                     returnIntent.putExtra("firstName", parent.getFirstName());
                     returnIntent.putExtra("lastName", parent.getLastName());
+                    SharedPreferences sp = getSharedPreferences("ID", Context.MODE_PRIVATE);
+                    SharedPreferences.Editor eLogin= sp.edit();
+                    eLogin.putString("fName", parent.getFirstName());
+                    eLogin.apply();
                     showProgress(false);
                     setResult(Activity.RESULT_OK, returnIntent);
                     finish();
@@ -217,15 +221,17 @@ public class LoginActivity extends AppCompatActivity {
             public void onCancelled(DatabaseError databaseError) {}
         };
 
+
+
         mFidListener = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                List<String> groupIds = new ArrayList<>();
+//                List<String> groupIds = new ArrayList<>();
                 String token = FirebaseInstanceId.getInstance().getToken();
                 if (dataSnapshot.exists()) {
                     for (DataSnapshot ds : dataSnapshot.getChildren()) {
                         String fid = ds.getKey().toString();
-                        groupIds.add(fid);
+//                        groupIds.add(fid);
                         DatabaseReference refToken = mDb.getReference("group")
                                 .child(fid)
                                 .child("users")
@@ -233,16 +239,16 @@ public class LoginActivity extends AppCompatActivity {
                         refToken.setValue(token);
                     }
                 }
-                String groupIdsStr = new Gson().toJson(groupIds);
+//                String groupIdsStr = new Gson().toJson(groupIds);
                 SharedPreferences sp = getSharedPreferences("ID", Context.MODE_PRIVATE);
                 SharedPreferences.Editor eLogin= sp.edit();
-                eLogin.putString("groupIds", groupIdsStr);
+//                eLogin.putString("groupIds", groupIdsStr);
                 eLogin.putString("uid", mAuth.getCurrentUser().getUid());
                 eLogin.apply();
-
                 DatabaseReference refUserInfo = mDb.getReference("userInfo")
                         .child(uid);
                 refUserInfo.addListenerForSingleValueEvent(mParentListener);
+
             }
 
             @Override

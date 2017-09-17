@@ -2,14 +2,19 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <group android:checkableBehavior="single">
-        <item
-            android:id="@+id/nav_map"
-            android:icon="@drawable/ic_location_on_black_24dp"
-            android:title="Find your friend" />
+        <!--<item-->
+            <!--android:id="@+id/nav_map"-->
+            <!--android:icon="@drawable/ic_location_on_black_24dp"-->
+            <!--android:title="Find your friend" />-->
         <!--<item-->
             <!--android:id="@+id/nav_camera"-->
             <!--android:icon="@drawable/ic_menu_camera"-->
             <!--android:title="Family" />-->
+        <item
+            android:id="@+id/nav_group"
+            android:icon="@drawable/ic_location_on_black_24dp"
+            android:title="Groups" />
+
         <item
             android:id="@+id/nav_zones"
             android:icon="@drawable/ic_adjust_black_24dp"
@@ -19,6 +24,8 @@
             android:id="@+id/nav_routes"
             android:icon="@drawable/ic_adjust_black_24dp"
             android:title="Routes Geo fencing" />
+
+
     </group>
 
     <item android:title="Account">

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item android:title="Invite"
+        android:icon="@drawable/ic_person_add_24dp"
+        app:showAsAction="always">
+        <menu>
+            <item android:id="@+id/scan"
+                android:title="Scan QR Code" >
+            </item>
+
+            <item android:id="@+id/read"
+                android:title="From Image" >
+            </item>
+        </menu>
+    </item>
+    <!--<item android:id="@+id/add_member"-->
+        <!--android:title="Invite a Member" >-->
+    <!--</item>-->
+
+    <item android:id="@+id/rename"
+        android:title="Rename the Group" >
+    </item>
+
+    <item android:id="@+id/quit"
+        android:title="Quit the Group" >
+    </item>
+</menu>

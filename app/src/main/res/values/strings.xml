@@ -28,4 +28,6 @@
     <string name="title_activity_maps">Map</string>
     <string name="title_zone_list">Zones</string>
     <string name="title_zone_detail">Zone Detail</string>
+    <integer name="viewfinder_border_width">4</integer>
+    <integer name="viewfinder_border_length">60</integer>
 </resources>

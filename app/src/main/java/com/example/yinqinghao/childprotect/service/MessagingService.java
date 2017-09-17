@@ -21,6 +21,11 @@ import com.google.firebase.messaging.RemoteMessage;
 public class MessagingService extends FirebaseMessagingService {
 
     private static final String TAG = "MessagingService";
+    private static RefreshGroupListener mRefreshGroupListener;
+
+    public interface RefreshGroupListener {
+        void refreshGroup(String gid, String gName, String action);
+    }
 
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
@@ -35,8 +40,27 @@ public class MessagingService extends FirebaseMessagingService {
         if (remoteMessage.getNotification() != null) {
             String msg = remoteMessage.getNotification().getBody();
             Log.d(TAG, "Message Notification Body: " + remoteMessage.getNotification().getBody());
-            sendNotification(msg);
+            if (msg.startsWith("refresh")) {
+                String [] params = msg.split(":");
+                String gid = params[1];
+                String gName = params[2];
+                String action = params[3];
+                if (mRefreshGroupListener != null) {
+                    mRefreshGroupListener.refreshGroup(gid, gName, action);
+                }
+            } else {
+                sendNotification(msg);
+            }
+
         }
+    }
+
+    public static void registerListener(RefreshGroupListener l) {
+        mRefreshGroupListener = l;
+    }
+
+    public static void unRegisterListener() {
+        mRefreshGroupListener = null;
     }
 
     public void sendNotification(String message){

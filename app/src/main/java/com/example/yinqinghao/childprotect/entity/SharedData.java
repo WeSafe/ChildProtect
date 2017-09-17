@@ -6,6 +6,7 @@ import android.util.Log;
 
 import com.google.android.gms.maps.model.LatLng;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +33,7 @@ public class SharedData {
     private static double distance = 0;
     private static long time = 0;
     private static Stack<Context> mContexts = new Stack<>();
+    private static List<String> mGroupId;
 
     public static boolean isStartedService() {
         return startedService;
@@ -186,6 +188,7 @@ public class SharedData {
         startedService = false;
         route = null;
         onPath = true;
+        mGroupId = null;
         clearSpeedData();
     }
 
@@ -195,4 +198,11 @@ public class SharedData {
         time = 0;
     }
 
+    public static List<String> getmGroupId() {
+        return mGroupId;
+    }
+
+    public static void setmGroupId(List<String> mGroupId) {
+        SharedData.mGroupId = mGroupId;
+    }
 }

@@ -79,9 +79,10 @@ public class RouteAlarmReceiver  extends BroadcastReceiver
         mWl.acquire();
         mMyId = intent.getStringExtra("uid");
         mGid = intent.getStringExtra("currentGid");
-        if (mMyId == null || mGid == null) {
-            Intent intent1 = new Intent(context, LoginActivity.class);
-            context.startActivity(intent1);
+        if (mMyId == null) {
+//            Intent intent1 = new Intent(context, LoginActivity.class);
+//            context.startActivity(intent1);
+            Toast.makeText(mContext, "Can't get User id", Toast.LENGTH_SHORT).show();
             return;
         }
 

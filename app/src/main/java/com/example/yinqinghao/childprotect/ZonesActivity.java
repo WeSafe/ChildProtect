@@ -35,13 +35,11 @@ import java.util.List;
 public class ZonesActivity extends AppCompatActivity {
     private GridView mZonesGrid;
     private FloatingActionButton mAddBtn;
-    private Intent mIntent;
     private static final int ADD_NEW_ZONE = 432;
     private static final int Edit_ZONE = 234;
 
     private FirebaseDatabase mDb;
 
-//    private String mFamilyId;
     private String mCurrentGid;
     private List<String> mGids;
     private List<Zone> mZones;
@@ -60,7 +58,6 @@ public class ZonesActivity extends AppCompatActivity {
         String gName = sp.getString("currentGName", null);
         setTitle("Alert Zones (" + gName +")");
         mDb = FirebaseDatabase.getInstance();
-
 
         mZonesGrid = (GridView) findViewById(R.id.gridview);
         mAddBtn = (FloatingActionButton) findViewById(R.id.fab_add_zone);
@@ -214,5 +211,11 @@ public class ZonesActivity extends AppCompatActivity {
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        SharedData.popContext();
+        super.onDestroy();
     }
 }
