@@ -249,6 +249,7 @@ public class AddRouteActivity extends AppCompatActivity implements OnMapReadyCal
         mMap.setOnMarkerClickListener(this);
         mMap.setOnMarkerDragListener(this);
         mMap.getUiSettings().setMapToolbarEnabled(false);
+        mMap.setMapStyle(SharedData.getMapStyleOptions());
         Intent intent = getIntent();
         Route route = intent.getParcelableExtra("route");
         if (route == null) {
@@ -348,14 +349,14 @@ public class AddRouteActivity extends AppCompatActivity implements OnMapReadyCal
         mStartMarker = mMap.addMarker(new MarkerOptions()
                 .position(startLatLag)
                 .title("Start Place")
-                .snippet("long click to drag")
+                .snippet("Press and hold to drag")
                 .anchor(0.0f, 1.0f)
                 .draggable(true));
 
         mEndMarker = mMap.addMarker(new MarkerOptions()
                 .position(endLatLag)
                 .title("End Place")
-                .snippet("long click to drag")
+                .snippet("Press and hold to drag")
                 .anchor(0.0f, 1.0f)
                 .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE))
                 .draggable(true));
@@ -366,14 +367,14 @@ public class AddRouteActivity extends AppCompatActivity implements OnMapReadyCal
         mStartMarker = mMap.addMarker(new MarkerOptions()
                 .position(list.get(0))
                 .title("Start Place")
-                .snippet("long click to drag")
+                .snippet("Press and hold to drag")
                 .anchor(0.0f, 1.0f)
                 .draggable(true));
 
         mEndMarker = mMap.addMarker(new MarkerOptions()
                 .position(list.get(1))
                 .title("End Place")
-                .snippet("long click to drag")
+                .snippet("Press and hold to drag")
                 .anchor(0.0f, 1.0f)
                 .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE))
                 .draggable(true));
@@ -382,7 +383,7 @@ public class AddRouteActivity extends AppCompatActivity implements OnMapReadyCal
             Marker wayPoint = mMap.addMarker(new MarkerOptions()
                     .position(list.get(i))
                     .anchor(0.0f, 1.0f)
-                    .title("click to delete, long click to drag")
+                    .title("Press to delete, Press and hold to drag")
                     .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ROSE))
                     .draggable(true));
             wayPoint.setTag("waypoint");

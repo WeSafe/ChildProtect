@@ -17,6 +17,7 @@
         android:horizontalSpacing="20dp"
         android:stretchMode="columnWidth"
         android:gravity="center"
+        android:animateLayoutChanges="true"
         android:layout_margin="10dp"
         />
 

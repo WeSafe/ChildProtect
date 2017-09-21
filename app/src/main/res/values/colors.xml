@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#01579b</color>
+    <!--<color name="colorPrimary">#01579b</color>-->
+    <!--<color name="colorPrimary">#91c8e4</color>-->
+    <color name="colorPrimary">#657c89</color>
     <color name="colorPrimaryDark">#002f6c</color>
+    <color name="colorText">#394046</color>
     <color name="colorPrimaryLight">#4f83cc</color>
     <color name="colorAccent">#009688</color>
     <color name="colorPrimaryText">#212121</color>
@@ -10,7 +13,7 @@
     <color name="safeFillColor">#33a5d6a7</color>
     <color name="dangerStrokeColor">#ef9a9a</color>
     <color name="dangerFillColor">#33ef9a9a</color>
-    <color name="buttonColor">#d32f2f</color>
+    <color name="buttonColor">#d83965</color>
     <color name="buttonColorDark">#9a0007</color>
     <color name="backgroundColor">#99000000</color>
     <color name="buttonGreen">#4caf50</color>
@@ -21,4 +24,5 @@
     <color name="viewfinder_mask">#60000000</color>
     <color name="viewfinder_laser">#ffcc0000</color>
     <color name="viewfinder_border">#ffafed44</color>
+    <color name="colorButton">#657c89</color>
 </resources>

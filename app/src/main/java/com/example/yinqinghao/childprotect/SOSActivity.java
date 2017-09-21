@@ -13,6 +13,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -285,6 +286,7 @@ public class SOSActivity extends AppCompatActivity implements OnMapReadyCallback
             }
             mMap.setPadding(0,80,0,0);
             mMap.setOnMarkerClickListener(this);
+            mMap.setMapStyle(SharedData.getMapStyleOptions());
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(-37.86705, 145.026),12));
             locationTask = new GetLocationTask(this,this,2);
             locationTask.execute();
@@ -340,7 +342,7 @@ public class SOSActivity extends AppCompatActivity implements OnMapReadyCallback
             p.setWidth(10);
         }
         Polyline polyline = sh.getPolyline();
-        polyline.setColor(Color.CYAN);
+        polyline.setColor(ContextCompat.getColor(this, R.color.buttonColor));
         polyline.setWidth(15);
 
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(mDestination,15));
@@ -357,7 +359,12 @@ public class SOSActivity extends AppCompatActivity implements OnMapReadyCallback
         String placeName = sh.getPlaceName();
         String address = sh.getStreetNum() + " " + sh.getRoad() + " " + sh.getRoadType()
                 + ", " + sh.getState() + ", " + sh.getPostcode();
-        String str = " " + placeName + "( " + dis + ") \n " + address;
+        String str = "";
+        if (sh.getoType().equals("T")) {
+            str = " " + placeName + "( " + dis + ")";
+        } else {
+            str = " " + placeName + "( " + dis + ") \n " + address;
+        }
 
         mTextDD.setText(str);
         mTextDD.setVisibility(View.VISIBLE);
@@ -433,11 +440,25 @@ public class SOSActivity extends AppCompatActivity implements OnMapReadyCallback
                 double lat = sh.getLat();
                 double lng = sh.getLng();
                 mDestination = new LatLng(lat, lng);
-                Marker marker = mMap.addMarker(new MarkerOptions()
+                MarkerOptions options = new MarkerOptions()
                         .position(mDestination)
                         .anchor(0.0f, 1.0f)
-                        .title(sh.getPlaceName())
-                        .icon(BitmapDescriptorFactory.fromResource(R.drawable.sh)));
+                        .title(sh.getPlaceName());
+                switch (sh.getoType()) {
+                    case "F" :
+                        options.icon(BitmapDescriptorFactory.fromResource(R.drawable.f));
+                        break;
+                    case "P" :
+                        options.icon(BitmapDescriptorFactory.fromResource(R.drawable.p));
+                        break;
+                    case "H" :
+                        options.icon(BitmapDescriptorFactory.fromResource(R.drawable.h));
+                        break;
+                    case "T" :
+                        options.icon(BitmapDescriptorFactory.fromResource(R.drawable.t));
+                        break;
+                }
+                Marker marker = mMap.addMarker(options);
                 marker.showInfoWindow();
                 mMarkersMap.put(marker, sh);
                 String key = getString(R.string.GOOGLE_DIRECTION_API_KEY);

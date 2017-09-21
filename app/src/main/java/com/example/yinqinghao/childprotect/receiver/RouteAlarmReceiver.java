@@ -86,6 +86,9 @@ public class RouteAlarmReceiver  extends BroadcastReceiver
             return;
         }
 
+        if (SharedData.getRoute() == null) {
+            return;
+        }
         mRoute = SharedData.getRoute();
 
         IntentFilter batteryLevelFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);

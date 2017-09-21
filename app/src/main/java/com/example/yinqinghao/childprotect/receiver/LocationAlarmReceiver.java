@@ -90,6 +90,10 @@ public class LocationAlarmReceiver extends BroadcastReceiver
         mWl.acquire();
         mMyId = intent.getStringExtra("uid");
 //        mGidsStr = intent.getStringExtra("groupIds");
+
+        if (SharedData.getmGroupId() == null) {
+            return;
+        }
         getGids();
         if (mMyId == null ) {
             Toast.makeText(mContext, "Can't get User id", Toast.LENGTH_SHORT).show();
@@ -111,8 +115,6 @@ public class LocationAlarmReceiver extends BroadcastReceiver
     }
 
     private void getGids(){
-//        Type listType = new TypeToken<List<String>>(){}.getType();
-//        mGroupIds = new Gson().fromJson(mGidsStr, listType);
         mGroupIds = SharedData.getmGroupId();
     }
 

@@ -8,12 +8,15 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
+import android.graphics.Typeface;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -23,12 +26,20 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.aigestudio.wheelpicker.WheelPicker;
+import com.example.yinqinghao.childprotect.GroupsActivity;
+import com.example.yinqinghao.childprotect.MainActivity;
 import com.example.yinqinghao.childprotect.Manifest;
+import com.example.yinqinghao.childprotect.adapter.GroupListAdapter;
 import com.example.yinqinghao.childprotect.asyncTask.GetLocationTask;
 import com.example.yinqinghao.childprotect.R;
 import com.example.yinqinghao.childprotect.clusterMarker.MarkerRender;
@@ -56,6 +67,8 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
@@ -106,7 +119,10 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
     private TextView mTextDate;
 //    private TextView mTextSpeed;
     private View mHisTutor;
-    private Spinner mSpinner;
+//    private Spinner mSpinner;
+    private ListView mGroupListView;
+    private TextView mGroupTextView;
+    private ImageView mGroupArrow;
 
     private FirebaseDatabase mDb;
     private ValueEventListener mLocationDataValueListner;
@@ -117,6 +133,7 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
 
     private Handler mUiHandler = new Handler();
     private Handler mRouteHandler;
+    protected Activity mActivity;
 
     private Stack<Runnable> mHisCallbacks;
     private List<String> mGroupIds;
@@ -133,10 +150,12 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
     private ClusterManager<MarkerItem> mClusterManager;
     private long mTodayTime;
     private boolean isFirst = true;
-    private boolean showTutorial = true;
+    private boolean isDown = true;
+    private int mItemHeight;
     private LocationAlarmReceiver.SpeedListener mSpeedListener;
     private MessagingService.RefreshGroupListener mRefreshGroupListener;
     private AdapterView.OnItemSelectedListener mOnItemSelectedListener;
+    private View.OnClickListener mArrowListener;
 
     public MapsFragment() {
         // Required empty public constructor
@@ -152,12 +171,16 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
         super.onActivityCreated(savedInstanceState);
         mView = getView();
         if (mView != null) {
-            MapsInitializer.initialize(this.getActivity());
+            if (mActivity == null) {
+                mActivity = getActivity();
+            }
+            MapsInitializer.initialize(mActivity);
             mMapView = (MapView) mView.findViewById(R.id.map);
             mMapView.onCreate(savedInstanceState);
             mMapView.onResume();
             mMapView.getMapAsync(this);
 
+            mGroupListView = (ListView) mView.findViewById(R.id.list_group);
             mMenuHistory = (FloatingActionMenu) mView.findViewById(R.id.menu_history);
             mButtenRealTime = (FloatingActionButton) mView.findViewById(R.id.fab_realtime);
             mButtonUploadLocation = (FloatingActionButton) mView.findViewById(R.id.fab_upload);
@@ -193,24 +216,26 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
 //
 //                    }
                     Activity activity = (Activity) SharedData.peekContext();
-                    String title = activity.getTitle().toString();
-                    if (title.equals("Scan QR code (" + gName +")")) {
-                        SharedData.popContext();
-                        activity.finish();
-                        activity = (Activity) SharedData.peekContext();
-                        title = activity.getTitle().toString();
-                    }
+                    if (activity != null) {
+                        String title = activity.getTitle().toString();
+                        if (title.equals("Scan QR code (" + gName + ")")) {
+                            SharedData.popContext();
+                            activity.finish();
+                            activity = (Activity) SharedData.peekContext();
+                            title = activity.getTitle().toString();
+                        }
 
-                    if (title.equals(gName)) {
-                        SharedData.popContext();
-                        activity.finish();
+                        if (title.equals(gName)) {
+                            SharedData.popContext();
+                            activity.finish();
+                        }
                     }
-                    getActivity().runOnUiThread(new Runnable() {
+                    mActivity.runOnUiThread(new Runnable() {
                         public void run() {
                             if (action.equals("remove")) {
-                                Toast.makeText(getActivity(), "You are removed from " + gName, Toast.LENGTH_SHORT).show();
+                                Toast.makeText(mActivity, "You are removed from " + gName, Toast.LENGTH_SHORT).show();
                             } else if (action.equals("join")) {
-                                Toast.makeText(getActivity(), "Welcome to " + gName, Toast.LENGTH_SHORT).show();
+                                Toast.makeText(mActivity, "Welcome to " + gName, Toast.LENGTH_SHORT).show();
                             }
                         }
                     });
@@ -239,12 +264,12 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
     }
 
     private void getFamilyIds() {
-        SharedPreferences sp = getActivity().getSharedPreferences("ID", Context.MODE_PRIVATE);
+        SharedPreferences sp = mActivity.getSharedPreferences("ID", Context.MODE_PRIVATE);
         uid = sp.getString("uid", null);
     }
 
     private void showHistoryPicker(Person person) {
-        final Dialog d = new Dialog(getActivity());
+        final Dialog d = new Dialog(mActivity);
         d.setTitle("DatePicker");
         d.setContentView(R.layout.picker);
         Button btnOK = (Button) d.findViewById(R.id.btn_ok);
@@ -263,7 +288,11 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
                 return l2.compareTo(l1);
             }
         });
+        int count = 0;
         for (String sTime: dates) {
+            if (++count > 7 ) {
+                break;
+            }
             Date date = new Date(Long.parseLong(sTime));
             sDate = format.format(date);
             data.add(sDate);
@@ -308,9 +337,12 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
         final PolylineOptions routeOption = new PolylineOptions();
         Object [] locations = dataTreeMap.values().toArray();
         List<LatLng> latLngs = new ArrayList<>();
+        LatLngBounds.Builder builder =  new LatLngBounds.Builder();
         for (Object o: locations) {
             LocationData locationData = (LocationData) o;
-            latLngs.add(new LatLng(locationData.getLat(), locationData.getLng()));
+            LatLng latLng = new LatLng(locationData.getLat(), locationData.getLng());
+            latLngs.add(latLng);
+            builder.include(latLng);
         }
 //        long delay = 800;
 //        double lat = 0;
@@ -339,9 +371,8 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
         routeOption.addAll(latLngs);
         Polyline polyline = mMap.addPolyline(routeOption);
         mLines.add(polyline);
-        LatLng camera = new LatLng(latLngs.get(0).latitude, latLngs.get(0).longitude);
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(camera, 12));
-
+//        LatLng camera = new LatLng(latLngs.get(0).latitude, latLngs.get(0).longitude);
+        mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(builder.build(), 20));
 //        for (final Object o: locations) {
 //            final LocationData l = (LocationData) o;
 //            if (lat != l.getLat() || lng != l.getLng()) {
@@ -368,10 +399,11 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
     private void setmFab() {
         mMenuHistory.removeAllMenuButtons();
         for (final Person person : mFriends.values()) {
-            final FloatingActionButton childHistoryFab = new FloatingActionButton(getActivity());
+            final FloatingActionButton childHistoryFab = new FloatingActionButton(mActivity);
             childHistoryFab.setButtonSize(FloatingActionButton.SIZE_MINI);
             childHistoryFab.setLabelText(person.getFirstName());
-            childHistoryFab.setImageResource(R.drawable.ic_child_care_black_24dp);
+            childHistoryFab.setImageResource(R.drawable.ppl);
+            childHistoryFab.setColorNormalResId(R.color.buttonColor);
             mMenuHistory.addMenuButton(childHistoryFab);
             childHistoryFab.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -398,25 +430,25 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
         mButtonUploadLocation.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(getActivity(), LocationService.class);
-                getActivity().startService(intent);
+                Intent intent = new Intent(mActivity, LocationService.class);
+                mActivity.startService(intent);
                 SharedData.setStartedService(true);
                 mButtonUploadLocation.hide(false);
                 mButtonPause.show(false);
-                Toast.makeText(getActivity(), "Uploading your location now.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(mActivity, "Uploading your location now.", Toast.LENGTH_SHORT).show();
             }
         });
 
         mButtonPause.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent i = new Intent(getActivity(), LocationService.class);
-                getActivity().stopService(i);
+                Intent i = new Intent(mActivity, LocationService.class);
+                mActivity.stopService(i);
                 SharedData.setStartedService(false);
                 SharedData.clearSpeedData();
                 mButtonUploadLocation.show(false);
                 mButtonPause.hide(false);
-                Toast.makeText(getActivity(), "Stop uploading.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(mActivity, "Stop uploading.", Toast.LENGTH_SHORT).show();
             }
         });
         showFab();
@@ -450,22 +482,26 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
             @Override
             public void run() {
                 mButtonUploadLocation.show(true);
-                showTutorial(mButtenRealTime, mHisTutor, mButtonUploadLocation, mSpinner);
+                showTutorial(mButtenRealTime, mHisTutor, mButtonUploadLocation, mGroupTextView);
             }
         }, 700);
     }
 
     private void setmCurrentGid(int position) {
         mCurrentGid = mGroupIds.get(position);
-        SharedPreferences sp = getActivity().getSharedPreferences("ID", Context.MODE_PRIVATE);
+        String gname = mGroupNames.get(position);
+        SharedPreferences sp = mActivity.getSharedPreferences("ID", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sp.edit();
         editor.putString("currentGid", mCurrentGid);
-        editor.putString("currentGName", mGroupNames.get(position));
+        editor.putString("currentGName", gname);
         editor.apply();
+        if (mGroupTextView != null) {
+            mGroupTextView.setText(gname);
+        }
     }
 
     private void createNewGroup(List<String> g) {
-        SharedPreferences sp = getActivity().getSharedPreferences("ID", Context.MODE_PRIVATE);
+        SharedPreferences sp = mActivity.getSharedPreferences("ID", Context.MODE_PRIVATE);
         DatabaseReference refGroup = mDb.getReference("group");
         String newGid = refGroup.push().getKey();
         String token = FirebaseInstanceId.getInstance().getToken();
@@ -483,25 +519,37 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
 
     private void initListener() {
         mDb = FirebaseDatabase.getInstance();
-
-        mOnItemSelectedListener = new AdapterView.OnItemSelectedListener() {
+//        mOnItemSelectedListener = new AdapterView.OnItemSelectedListener() {
+//            @Override
+//            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+//                mMap.clear();
+//                mClusterManager.clearItems();
+//                markMyLocation();
+//                if (mGroupNames.size() != 0) {
+//                    setmCurrentGid(position);
+//                }
+//                getChildLocation();
+//            }
+//
+//            @Override
+//            public void onNothingSelected(AdapterView<?> parent) {
+//
+//            }
+//        };
+        mArrowListener = new View.OnClickListener() {
             @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                mMap.clear();
-                mClusterManager.clearItems();
-                markMyLocation();
-                if (mGroupNames.size() != 0) {
-                    setmCurrentGid(position);
+            public void onClick(View v) {
+                if (isDown) {
+                    isDown = false;
+                    mGroupArrow.setImageResource(R.drawable.up);
+                    mGroupListView.setVisibility(View.VISIBLE);
+                } else {
+                    isDown = true;
+                    mGroupArrow.setImageResource(R.drawable.down);
+                    mGroupListView.setVisibility(View.GONE);
                 }
-                getChildLocation();
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
             }
         };
-
 
         mFidListener = new ValueEventListener() {
             @Override
@@ -543,16 +591,64 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
                 }
 
                 if (mGroupIds.size() == mGroupNames.size()) {
-                    Toolbar toolbar = (Toolbar) getActivity().findViewById(R.id.toolbar);
-                    mSpinner = new Spinner(getActivity());
-                    ArrayAdapter spinnerArrayAdapter = new ArrayAdapter(getActivity(),
-                            R.layout.spinner_item,
-                            mGroupNames);
-                    mSpinner.setAdapter(spinnerArrayAdapter);
-                    mSpinner.getBackground().setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_ATOP);
-                    mSpinner.setOnItemSelectedListener(mOnItemSelectedListener);
-                    toolbar.removeViewAt(1);
-                    toolbar.addView(mSpinner);
+                    Toolbar toolbar = (Toolbar) mActivity.findViewById(R.id.toolbar);
+//                    mSpinner = new Spinner(getActivity());
+//                    ArrayAdapter spinnerArrayAdapter = new ArrayAdapter(getActivity(),
+//                            R.layout.spinner_item,
+//                            mGroupNames);
+//
+//                    mSpinner.setAdapter(spinnerArrayAdapter);
+//                    mSpinner.getBackground().setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_ATOP);
+//                    mSpinner.setOnItemSelectedListener(mOnItemSelectedListener);
+//                    toolbar.removeViewAt(1);
+//                    toolbar.addView(mSpinner);
+                    GroupListAdapter adapter = new GroupListAdapter(mActivity, mGroupNames);
+                    mGroupListView.setAdapter(adapter);
+
+                    CoordinatorLayout.LayoutParams p = new CoordinatorLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                    if (mGroupNames.size() > 5) {
+                        mGroupListView.getLayoutParams().height = 680;
+                    } else {
+                        mGroupListView.setLayoutParams(p);
+                    }
+                    mGroupListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                        @Override
+                        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                            itemClick(position);
+                        }
+                    });
+
+                    if (isFirst) {
+                        isFirst = false;
+                        mGroupTextView = new TextView(mActivity);
+                        mGroupTextView.setTextSize(20);
+                        mGroupArrow = new ImageView(mActivity);
+                        mGroupTextView.setTextColor(Color.WHITE);
+                        mGroupTextView.setTypeface(null, Typeface.BOLD);
+                        mGroupArrow.setImageResource(R.drawable.down);
+                        mGroupListView.setVisibility(View.GONE);
+                        mGroupArrow.setOnClickListener(mArrowListener);
+                        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(40, 40);
+                        layoutParams.setMargins(80, 0, 0, 0);
+                        mGroupArrow.setLayoutParams(layoutParams);
+                        mGroupTextView.setOnClickListener(mArrowListener);
+                        toolbar.addView(mGroupTextView);
+                        toolbar.addView(mGroupArrow);
+                    }
+
+                    SharedPreferences sp = mActivity.getSharedPreferences("ID", Context.MODE_PRIVATE);
+                    String currentGid = sp.getString("currentGid", null);
+                    if (mCurrentGid == null || currentGid == null
+                            || ( currentGid != null && !mGroupIds.contains(currentGid))
+                            || (mCurrentGid != null && !mGroupIds.contains(mCurrentGid))) {
+                        setmCurrentGid(0);
+                        stopHistroyRoute();
+                        mMap.clear();
+                        mClusterManager.clearItems();
+                        mTextDate.setVisibility(View.GONE);
+                        markMyLocation();
+                        getChildLocation();
+                    }
 
                 }
             }
@@ -732,6 +828,20 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
 //        };
     }
 
+    private void itemClick(int pos) {
+        mMap.clear();
+        mClusterManager.clearItems();
+        markMyLocation();
+        if (mGroupNames.size() != 0) {
+            setmCurrentGid(pos);
+        }
+        getChildLocation();
+        mGroupListView.setVisibility(View.GONE);
+        mGroupArrow.setImageResource(R.drawable.down);
+        isDown = true;
+        mGroupTextView.setText(mGroupNames.get(pos));
+    }
+
     private void setFab(List<String> userIds, String id) {
         if (mFriends.size() == userIds.size() -1 || userIds.size() == 1) {
             setmFab();
@@ -749,9 +859,9 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
         long radius = zone.getRadius();
         LatLng latLng = new LatLng(zone.getLat(),zone.getLng());
         boolean isSafe = zone.getStatus().equals("safe");
-        int strokeColor = ContextCompat.getColor(getActivity() ,
+        int strokeColor = ContextCompat.getColor(mActivity ,
                 isSafe ? R.color.safeStrokeColor : R.color.dangerStrokeColor);
-        int fillColor = ContextCompat.getColor(getActivity() ,
+        int fillColor = ContextCompat.getColor(mActivity ,
                 isSafe ? R.color.safeFillColor : R.color.dangerFillColor);
         String des = zone.getDes();
 
@@ -834,21 +944,13 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-//                    try {
-//                        if (locationTask == null) {
-//                            locationTask = new GetLocationTask(this, getActivity(), 4);
-//                        }
-//                        locationTask.execute();
-//                    } catch (IllegalStateException ex) {
-//
-//                    }
                     try {
                         mMap.setMyLocationEnabled(true);
                     } catch (SecurityException ex) {
 
                     }
                 } else
-                    Toast.makeText(getActivity(), "Can't get the location, please grant the permission",
+                    Toast.makeText(mActivity, "Can't get the location, please grant the permission",
                             Toast.LENGTH_SHORT);
                 return;
             }
@@ -869,11 +971,10 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
         mMap.setMyLocationEnabled(true);
         mMap.getUiSettings().setMyLocationButtonEnabled(false);
         mMap.getUiSettings().setMapToolbarEnabled(false);
-        mMap.setInfoWindowAdapter(new MyInfoWindowAdapter(getActivity()));
+        mMap.setMapStyle(SharedData.getMapStyleOptions());
+        mMap.setInfoWindowAdapter(new MyInfoWindowAdapter(mActivity));
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(-37.8668, 145.016), 13));
         setUpClusterer();
-//        getChildLocation();
-//        locationTask = new GetLocationTask(this, getActivity(), 4);
         markMyLocation();
 //        try {
 //            locationTask.execute();
@@ -883,15 +984,15 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
     }
 
     private void setUpClusterer() {
-        mClusterManager = new ClusterManager<>(getActivity(), mMap);
-        MarkerRender render = new MarkerRender(getActivity(),mMap,mClusterManager);
+        mClusterManager = new ClusterManager<>(mActivity, mMap);
+        MarkerRender render = new MarkerRender(mActivity,mMap,mClusterManager);
         render.setMinClusterSize(1);
         mClusterManager.setRenderer(render);
         mMap.setOnCameraIdleListener(mClusterManager);
     }
 
     private void markMyLocation() {
-        locationTask = new GetLocationTask(this, getActivity(), 1);
+        locationTask = new GetLocationTask(this, mActivity, 1);
         locationTask.execute();
     }
 
@@ -925,7 +1026,7 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == ZONE_ACTIVITY) {
-            if (resultCode == getActivity().RESULT_OK) {
+            if (resultCode == mActivity.RESULT_OK) {
                 for (int i = 0; i < mCenters.size(); i++) {
                     mZones.get(i).remove();
                     mCenters.get(i).remove();
@@ -940,7 +1041,7 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
 
         if (requestCode == GROUP_ACTIVITY) {
 //            mGroupIds = new ArrayList<>();
-            if (resultCode == getActivity().RESULT_OK) {
+            if (resultCode == mActivity.RESULT_OK) {
 //                List<Group> groups = data.getParcelableArrayListExtra("groups");
 //                for (Group g: groups) {
 //                    mGroupIds.add(g.getId());
@@ -983,17 +1084,26 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
 
     private void showTutorial(View view, View view2, View view3, View view4) {
         if (SharedData.isShowTutorial1()) {
-            SpotlightSequence.getInstance(getActivity(),null)
+            SpotlightSequence.getInstance(mActivity,null)
                     .addSpotlight(view,
                             "Real-Time Location", "See the location of your family and friends ", SharedData.getRandomStr())
                     .addSpotlight(view2,
                             "History Route", "Click here to see history route of family and friends", SharedData.getRandomStr())
                     .addSpotlight(view3,
-                            "Update Location", "Click here to switch on/off location", SharedData.getRandomStr())
+                            "Share Location", "Click here to switch on/off for sharing location", SharedData.getRandomStr())
                     .addSpotlight(view4,
                             "Friends Groups", "Click here to see your social personal safety network of friends and family", SharedData.getRandomStr())
                     .startSequence();
         }
+    }
+
+    public void showTuturial() {
+        if (mButtenRealTime == null
+                || mHisTutor == null
+                || mButtonUploadLocation == null
+                || mGroupTextView == null)
+            return;
+        showTutorial(mButtenRealTime, mHisTutor, mButtonUploadLocation, mGroupTextView);
     }
 
     @Override
@@ -1005,6 +1115,21 @@ public class MapsFragment extends android.app.Fragment implements OnMapReadyCall
                 .zoom(13).build();
 
             mMap.animateCamera(CameraUpdateFactory.newCameraPosition(position));
+        }
+    }
+
+    /**
+     * Called when a fragment is first attached to its context.
+     * {@link #onCreate(Bundle)} will be called after this.
+     *
+     * @param context
+     */
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+
+        if (context instanceof Activity){
+            mActivity = (Activity) context;
         }
     }
 }

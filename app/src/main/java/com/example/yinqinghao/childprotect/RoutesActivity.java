@@ -10,6 +10,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.view.animation.GridLayoutAnimationController;
 import android.widget.AdapterView;
 import android.widget.GridView;
 
@@ -129,8 +132,6 @@ public class RoutesActivity extends AppCompatActivity {
                         mRoutes.add(route);
                     }
                     showData();
-                    mRoutesGrid.setOnItemClickListener(mGridClickListener);
-                    mRoutesGrid.setOnItemLongClickListener(mGridLongClickListener);
                 }
             }
 
@@ -144,6 +145,11 @@ public class RoutesActivity extends AppCompatActivity {
     private void showData() {
         GridAdapter adapter = new GridAdapter(RoutesActivity.this, mRoutes, true);
         mRoutesGrid.setAdapter(adapter);
+        Animation animation = AnimationUtils.loadAnimation(this,R.anim.grid_anim);
+        GridLayoutAnimationController controller = new GridLayoutAnimationController(animation, .2f, .2f);
+        mRoutesGrid.setLayoutAnimation(controller);
+        mRoutesGrid.setOnItemClickListener(mGridClickListener);
+        mRoutesGrid.setOnItemLongClickListener(mGridLongClickListener);
     }
 
     @Override

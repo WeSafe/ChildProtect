@@ -205,7 +205,7 @@ public class SignUpActivity extends AppCompatActivity {
             focusView = mPwdEditText;
             cancel = true;
         } else if (pwd.length() < 6) {
-            mPwdEditText.setError(getString(R.string.error_invalid_password));
+            mPwdEditText.setError("The length of password should be more than 6.");
             focusView = mPwdEditText;
             cancel = true;
         }
@@ -295,12 +295,13 @@ public class SignUpActivity extends AppCompatActivity {
                                 SharedPreferences.Editor eLogin= sp.edit();
                                 eLogin.putString("groupIds", groupIdsStr);
                                 eLogin.putString("uid", uid);
-                                eLogin.apply();
                                 //Back to Home page
                                 Intent returnIntent = getIntent();
                                 returnIntent.putExtra("email", email);
                                 returnIntent.putExtra("firstName", fname);
                                 returnIntent.putExtra("lastName", lname);
+                                eLogin.putString("fName", fname);
+                                eLogin.apply();
                                 setResult(Activity.RESULT_OK, returnIntent);
                                 finish();
                                 showProgress(false);

@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
+    tools:context="com.example.yinqinghao.childprotect.FeedbackActivity">
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:orientation="vertical">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textStyle="bold"
+                android:layout_marginBottom="10dp"
+                android:text="Coments about WeSafe:"/>
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="85dp"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="Function: "/>
+                <com.hsalf.smilerating.SmileRating
+                    android:id="@+id/function_rating"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="85dp"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="Design: "/>
+                <com.hsalf.smilerating.SmileRating
+                    android:id="@+id/design_rating"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="85dp"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="Ease Of Use: "/>
+                <com.hsalf.smilerating.SmileRating
+                    android:id="@+id/use_rating"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="85dp"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="Overall: "/>
+                <com.hsalf.smilerating.SmileRating
+                    android:id="@+id/overall_rating"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:textStyle="bold"
+                android:text="Coments about WeSafe:"/>
+
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:background="@drawable/feedback_box"
+                android:layout_marginTop="10dp"
+                android:padding="10dp"
+                android:layout_height="150dp">
+                <EditText
+                    android:id="@+id/txt_comments"
+                    android:gravity="top"
+                    android:layout_width="match_parent"
+                    android:inputType="textMultiLine"
+                    android:background="@android:color/transparent"
+                    android:layout_height="130dp" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:textStyle="bold"
+                android:text="Your Email (optional):"/>
+
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:background="@drawable/feedback_box"
+                android:layout_marginTop="10dp"
+                android:layout_height="40dp">
+                <EditText
+                    android:id="@+id/txt_feedback_email"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginRight="10dp"
+                    android:layout_width="match_parent"
+                    android:inputType="textEmailAddress"
+                    android:background="@android:color/transparent"
+                    android:layout_height="40dp" />
+            </LinearLayout>
+
+
+            <com.dd.processbutton.FlatButton
+                android:id="@+id/btn_sub"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="30dp"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:text="Submit"
+                android:textColor="@android:color/white"
+                app:pb_colorNormal="@color/buttonColor"
+                app:pb_colorPressed="@color/buttonColorDark" />
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

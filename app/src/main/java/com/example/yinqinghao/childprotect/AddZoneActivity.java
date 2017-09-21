@@ -229,8 +229,8 @@ public class AddZoneActivity extends AppCompatActivity implements OnMapReadyCall
     private void drawCircle(LatLng latLng, double radius, int strokeColor, int fillColor) {
         mCenterMarker = mMap.addMarker(new MarkerOptions()
                 .position(latLng)
-                .title("center")
-                .snippet("Press and hold to move")
+                .title("Press and hold to move")
+//                .snippet("Press and hold to move")
                 .anchor(0.0f, 1.0f)
                 .draggable(true));
 
@@ -287,6 +287,7 @@ public class AddZoneActivity extends AppCompatActivity implements OnMapReadyCall
         mMap = googleMap;
         mMap.getUiSettings().setMapToolbarEnabled(false);
         mMap.setOnMarkerDragListener(this);
+        mMap.setMapStyle(SharedData.getMapStyleOptions());
         Intent intent = getIntent();
         Zone zone = intent.getParcelableExtra("zone");
         if (zone == null) {

@@ -1,13 +1,16 @@
 package com.example.yinqinghao.childprotect;
 
+import android.*;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NavUtils;
@@ -19,6 +22,9 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.view.animation.GridLayoutAnimationController;
 import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.GridView;
@@ -67,6 +73,8 @@ public class AddGroupActivity extends AppCompatActivity {
     private final int RESULT_QUIT = 777;
     private final int GALLERY_REQUEST = 111;
     private final int SCAN_REQUEST = 222;
+    private final int MY_PERMISSIONS_REQUEST_CAMERA = 145;
+    private final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 451;
 
     private AdapterView.OnItemLongClickListener mGridLongClickListener;
 
@@ -135,7 +143,9 @@ public class AddGroupActivity extends AppCompatActivity {
 
                                                         String msg = "refresh:" + gid + ":" + mGroup.getName() + ":remove";
                                                         refNotification.push().child(msg).setValue(true);
-                                                        mLoadingDialog.dismiss();
+                                                        if (mLoadingDialog != null) {
+                                                            mLoadingDialog.dismiss();
+                                                        }
 //                                                        mPeople.remove(member);
 //                                                        showData();
                                                     } else {
@@ -186,7 +196,9 @@ public class AddGroupActivity extends AppCompatActivity {
                                     mPeople.add(member);
                                     if (mPeople.size() == count) {
                                         showData();
-                                        mLoadingDialog.dismiss();
+                                        if (mLoadingDialog != null) {
+                                            mLoadingDialog.dismiss();
+                                        }
                                     }
                                 }
                             }
@@ -211,6 +223,9 @@ public class AddGroupActivity extends AppCompatActivity {
     private void showData() {
         GridAdapter adapter = new GridAdapter(true, AddGroupActivity.this, mPeople, mGroup.getUserID());
         mGroupMemberGrid.setAdapter(adapter);
+        Animation animation = AnimationUtils.loadAnimation(this,R.anim.grid_anim);
+        GridLayoutAnimationController controller = new GridLayoutAnimationController(animation, .2f, .2f);
+        mGroupMemberGrid.setLayoutAnimation(controller);
     }
 
     @Override
@@ -266,7 +281,9 @@ public class AddGroupActivity extends AppCompatActivity {
                                     refRoute.removeValue();
 
                                 }
-                                mLoadingDialog.dismiss();
+                                if (mLoadingDialog != null) {
+                                    mLoadingDialog.dismiss();
+                                }
                                 Intent returnIntent = new Intent();
                                 returnIntent.putExtra("group", mGroup);
                                 setResult(RESULT_QUIT, returnIntent);
@@ -296,6 +313,8 @@ public class AddGroupActivity extends AppCompatActivity {
         View viewInflated = LayoutInflater.from(this).inflate(R.layout.rename, (ViewGroup) findViewById(android.R.id.content), false);
         // Set up the input
         final EditText input = (EditText) viewInflated.findViewById(R.id.input_title);
+        input.setError(null);
+        input.setText(mGroup.getName());
         // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
         builder.setView(viewInflated);
 
@@ -303,9 +322,39 @@ public class AddGroupActivity extends AppCompatActivity {
         builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                dialog.dismiss();
+
+            }
+        });
+        builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+
+        final AlertDialog ad = builder.create();
+        ad.show();
+        ad.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v) {
                 showProgress();
-                String groupName = input.getText().toString();
+                String groupName = input.getText().toString().trim();
+                if (groupName.length() == 0) {
+                    input.setError("Please input a name.");
+                    if (mLoadingDialog != null) {
+                        mLoadingDialog.dismiss();
+                    }
+                    return;
+                }
+                if (groupName.length() > 20) {
+                    input.setError("The length of group name should be within 20");
+                    if (mLoadingDialog != null) {
+                        mLoadingDialog.dismiss();
+                    }
+                    return;
+                }
+
                 mGroup.setName(groupName);
                 final String gid = mGroup.getId();
                 AddGroupActivity.this.setTitle(groupName);
@@ -344,24 +393,21 @@ public class AddGroupActivity extends AppCompatActivity {
                                 }
                             });
 
-                            mLoadingDialog.dismiss();
+                            if (mLoadingDialog != null) {
+                                mLoadingDialog.dismiss();
+                            }
                         } else {
                             Toast.makeText(AddGroupActivity.this, task.getException().getMessage(), Toast.LENGTH_SHORT).show();
                         }
-                        mLoadingDialog.dismiss();
+                        if (mLoadingDialog != null) {
+                            mLoadingDialog.dismiss();
+                        }
                     }
                 });
-
-            }
-        });
-        builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.cancel();
+                ad.dismiss();
             }
         });
 
-        builder.show();
     }
 
     /**
@@ -395,13 +441,41 @@ public class AddGroupActivity extends AppCompatActivity {
                 quit();
                 return true;
             case R.id.scan:
-                scanQRCode();
+                scan();
                 return true;
             case R.id.read:
-                readImageFromGallery();
+                read();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
+        }
+    }
+
+    private void scan() {
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1) {
+            if (checkSelfPermission(android.Manifest.permission.CAMERA)
+                    != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{android.Manifest.permission.CAMERA},
+                        MY_PERMISSIONS_REQUEST_CAMERA);
+            } else {
+                scanQRCode();
+            }
+        } else {
+            scanQRCode();
+        }
+    }
+
+    private void read() {
+        if (Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            if (checkSelfPermission(android.Manifest.permission.READ_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{android.Manifest.permission.READ_EXTERNAL_STORAGE},
+                        MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE);
+            } else {
+                readImageFromGallery();
+            }
+        } else {
+            readImageFromGallery();
         }
     }
 
@@ -447,11 +521,15 @@ public class AddGroupActivity extends AppCompatActivity {
 
         if (requestCode == SCAN_REQUEST) {
             if (resultCode == RESULT_OK) {
-                String result = data.getStringExtra("result");
-                String [] r = result.split(",");
-                String mid = r[0];
-                String token = r[1];
-                addNewMember(mid, token);
+                try {
+                    String result = data.getStringExtra("result");
+                    String [] r = result.split(",");
+                    String mid = r[0];
+                    String token = r[1];
+                    addNewMember(mid, token);
+                } catch (Exception ex) {
+                    Toast.makeText(this, "Please Scan again.", Toast.LENGTH_SHORT).show();
+                }
             }
         }
     }
@@ -477,7 +555,9 @@ public class AddGroupActivity extends AppCompatActivity {
 
                     String msg = "refresh:" + gid + ":" + mGroup.getName() + ":join";
                     refNotification.push().child(msg).setValue(true);
-                    mLoadingDialog.dismiss();
+                    if (mLoadingDialog != null) {
+                        mLoadingDialog.dismiss();
+                    }
                 } else {
                     Toast.makeText(AddGroupActivity.this, task.getException().getMessage(), Toast.LENGTH_SHORT).show();
                 }
@@ -501,4 +581,27 @@ public class AddGroupActivity extends AppCompatActivity {
         super.onDestroy();
     }
 
+    @Override
+    public void onRequestPermissionsResult(final int requestCode, @NonNull final String[] permissions, @NonNull final int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission granted.
+                readImageFromGallery();
+            } else {
+                // User refused to grant permission.
+                Toast.makeText(this, "Can't get the permission.", Toast.LENGTH_SHORT).show();
+            }
+        }
+
+        if (requestCode == MY_PERMISSIONS_REQUEST_CAMERA) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission granted.
+                scanQRCode();
+            } else {
+                // User refused to grant permission.
+                Toast.makeText(this, "Can't get the permission.", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
 }

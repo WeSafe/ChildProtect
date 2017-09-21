@@ -138,11 +138,18 @@
         </activity>
         <activity
             android:name=".ScanActivity"
-            android:theme="@style/AppTheme.NoActionBar"
-            android:parentActivityName=".GroupsActivity">
+            android:parentActivityName=".GroupsActivity"
+            android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".GroupsActivity" />
+        </activity>
+        <activity
+            android:name=".FeedbackActivity"
+            android:parentActivityName=".MainActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".MainActivity" />
         </activity>
     </application>
 

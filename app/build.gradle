@@ -60,8 +60,10 @@ dependencies {
     compile 'com.github.safetysystemtechnology:android-shake-detector:v1.2'
     compile 'pl.droidsonroids.gif:android-gif-drawable:1.2.8'
     compile 'com.google.zxing:core:3.0.1'
+    compile 'com.github.sujithkanna:smileyrating:1.6.8'
     testCompile 'junit:junit:4.12'
 }
+
 
 
 

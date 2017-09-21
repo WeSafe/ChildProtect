@@ -4,7 +4,9 @@ import android.content.Context;
 import android.location.Location;
 import android.util.Log;
 
+import com.example.yinqinghao.childprotect.R;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MapStyleOptions;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,6 +36,7 @@ public class SharedData {
     private static long time = 0;
     private static Stack<Context> mContexts = new Stack<>();
     private static List<String> mGroupId;
+    private static MapStyleOptions mapStyleOptions;
 
     public static boolean isStartedService() {
         return startedService;
@@ -198,11 +201,28 @@ public class SharedData {
         time = 0;
     }
 
+    public static void startTutorial() {
+        showTutorial1 = true;
+        showTutorial2 = true;
+        showTutorial3 = true;
+    }
+
     public static List<String> getmGroupId() {
         return mGroupId;
     }
 
     public static void setmGroupId(List<String> mGroupId) {
         SharedData.mGroupId = mGroupId;
+    }
+
+    public static MapStyleOptions getMapStyleOptions() {
+        if (mapStyleOptions == null) {
+            mapStyleOptions = MapStyleOptions.loadRawResourceStyle(mContexts.peek(), R.raw.map_retro);
+        }
+        return mapStyleOptions;
+    }
+
+    public static void setMapStyleOptions(MapStyleOptions mapStyleOptions) {
+        SharedData.mapStyleOptions = mapStyleOptions;
     }
 }

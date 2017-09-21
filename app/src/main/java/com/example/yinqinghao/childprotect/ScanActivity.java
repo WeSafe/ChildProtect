@@ -32,7 +32,14 @@ public class ScanActivity extends BaseScannerActivity implements ZXingScannerVie
         setContentView(R.layout.activity_scan);
         setupToolbar();
         SharedData.pushContext(this);
-        setTitle("Scan QR code (" + getIntent().getStringExtra("gName") +")");
+        String gName = getIntent().getStringExtra("gName");
+        if (gName == null) {
+            setTitle("Scan QR code");
+        } else {
+            setTitle("Scan QR code (" + gName +")");
+        }
+
+
 
         ViewGroup contentFrame = (ViewGroup) findViewById(R.id.scan_content_frame);
         mScannerView = new ZXingScannerView(this) {

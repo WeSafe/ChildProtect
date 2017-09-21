@@ -115,7 +115,7 @@
                     android:buttonTint="@color/colorPrimary"
                     android:textSize="12dp"
                     android:textStyle="bold"
-                    android:text="Bicycling" />
+                    android:text="Cycling" />
 
                 <RadioButton
                     android:id="@+id/rb_transit"
@@ -125,7 +125,7 @@
                     android:buttonTint="@color/colorPrimary"
                     android:textSize="12dp"
                     android:textStyle="bold"
-                    android:text="Transit" />
+                    android:text="Transport" />
 
 
             </RadioGroup>
@@ -143,7 +143,7 @@
                 android:layout_weight="45"
                 android:text="add way point"
                 android:textColor="@android:color/white"
-                app:pb_colorNormal="@color/colorPrimary"
+                app:pb_colorNormal="@color/colorButton"
                 app:pb_colorPressed="@color/colorPrimaryDark"/>
             <View
                 android:layout_width="0dp"
@@ -159,7 +159,7 @@
                 android:layout_weight="45"
                 android:text="get route"
                 android:textColor="@android:color/white"
-                app:pb_colorNormal="@color/colorPrimary"
+                app:pb_colorNormal="@color/colorButton"
                 app:pb_colorPressed="@color/colorPrimaryDark"/>
 
         </LinearLayout>

@@ -12,17 +12,17 @@
             <!--android:title="Family" />-->
         <item
             android:id="@+id/nav_group"
-            android:icon="@drawable/ic_location_on_black_24dp"
+            android:icon="@drawable/nav_group"
             android:title="Groups" />
 
         <item
             android:id="@+id/nav_zones"
-            android:icon="@drawable/ic_adjust_black_24dp"
+            android:icon="@drawable/nav_geo"
             android:title="Geo fencing" />
 
         <item
             android:id="@+id/nav_routes"
-            android:icon="@drawable/ic_adjust_black_24dp"
+            android:icon="@drawable/nav_route"
             android:title="Routes Geo fencing" />
 
 
@@ -31,9 +31,17 @@
     <item android:title="Account">
         <menu>
             <item
+                android:id="@+id/nav_tutorial"
+                android:icon="@drawable/tutorial"
+                android:title="Tutorial" />
+            <item
+                android:id="@+id/nav_feedback"
+                android:icon="@drawable/feedback"
+                android:title="Feedback" />
+            <item
                 android:id="@+id/nav_logout"
-                android:icon="@drawable/ic_exit_to_app_black_24dp"
-                android:title="Log out" />
+                android:icon="@drawable/login"
+                android:title="Sign out" />
         </menu>
     </item>
 

@@ -107,12 +107,12 @@ public class GridAdapter extends BaseAdapter {
             } else if (isGroup) {
                 Group group = mGroups.get(position);
                 textView.setText(group.getName());
-                imageView.setImageResource(R.drawable.ic_group_black);
+                imageView.setImageResource(R.drawable.nav_group);
             } else if (isPerson) {
                 Person person = mPeople.get(position);
                 textView.setText(person.getFirstName() + " " + person.getLastName());
                 imageView.setImageResource(adminId.equals(person.getUid())
-                        ? R.drawable.ic_android_black_24dp : R.drawable.ic_person_black);
+                        ? R.drawable.admin : R.drawable.user);
             } else {
                 Zone zone = mZones.get(position);
                 textView.setText(zone.getDes());

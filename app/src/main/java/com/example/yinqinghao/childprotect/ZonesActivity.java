@@ -10,6 +10,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.view.animation.GridLayoutAnimationController;
 import android.widget.AdapterView;
 import android.widget.GridView;
 
@@ -141,8 +144,6 @@ public class ZonesActivity extends AppCompatActivity {
                         mZones.add(zone);
                     }
                     showData();
-                    mZonesGrid.setOnItemClickListener(mGridClickListener);
-                    mZonesGrid.setOnItemLongClickListener(mGridLongClickListener);
                 }
             }
 
@@ -181,6 +182,11 @@ public class ZonesActivity extends AppCompatActivity {
     private void showData() {
         GridAdapter adapter = new GridAdapter(ZonesActivity.this, mZones);
         mZonesGrid.setAdapter(adapter);
+        Animation animation = AnimationUtils.loadAnimation(this,R.anim.grid_anim);
+        GridLayoutAnimationController controller = new GridLayoutAnimationController(animation, .2f, .2f);
+        mZonesGrid.setLayoutAnimation(controller);
+        mZonesGrid.setOnItemClickListener(mGridClickListener);
+        mZonesGrid.setOnItemLongClickListener(mGridLongClickListener);
     }
 
 

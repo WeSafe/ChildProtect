@@ -39,7 +39,7 @@ public class MarkerRender extends DefaultClusterRenderer<MarkerItem> {
             title += item.getmTitle() + ",";
         }
         title = title.substring(0,title.length()-1);
-        title += " Location";
+//        title += " Location";
         markerOptions.title(title);
         super.onBeforeClusterRendered(cluster,markerOptions);
     }

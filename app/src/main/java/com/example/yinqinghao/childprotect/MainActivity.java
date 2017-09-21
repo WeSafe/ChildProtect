@@ -58,6 +58,8 @@ public class MainActivity extends AppCompatActivity
     private SimpleDialog mDialog;
     private ShakeDetector mShakeDetector;
     private ShakeCallback mShakeCallack;
+    private Toolbar toolbar;
+    private boolean isFirst = true;
 
     private Fragment mMapFragment;
     private FirebaseAuth mAuth;
@@ -70,11 +72,9 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         setTitle("");
-
-
 
         drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -89,7 +89,7 @@ public class MainActivity extends AppCompatActivity
                 if (user != null) {
                     // User is signed in
                     Log.d(TAG, "onAuthStateChanged:signed_in:" + user.getUid());
-
+                    setUpShakeToSos();
                     if (mMapFragment == null)
                         mMapFragment = new MapsFragment();
                     Fragment home = mMapFragment;
@@ -99,7 +99,6 @@ public class MainActivity extends AppCompatActivity
                     String name = sp.getString("name",null);
                     String email = sp.getString("email", null);
                     setUserInfo(email,name);
-                    setUpShakeToSos();
                     popupSplashActivity();
                 } else {
                     // User is signed out
@@ -114,6 +113,7 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+        navigationView.setItemIconTintList(null);
 
         accountNavItem = navigationView.getMenu().getItem(3);
         //find the login views
@@ -150,6 +150,12 @@ public class MainActivity extends AppCompatActivity
         setUpShakeToSos();
     }
 
+    public boolean isFirst() {
+        boolean a = isFirst;
+        isFirst = false;
+        return a;
+    }
+
     private void popupSplashActivity() {
         if (!SharedData.isSplashed()) {
             Intent intent = new Intent(this, SplashActivity.class);
@@ -184,6 +190,9 @@ public class MainActivity extends AppCompatActivity
     protected void onResume() {
         if (mShakeDetector != null && !mShakeDetector.isRunning()) {
             mShakeDetector.start(this);
+        }
+        if (SharedData.peekContext() == null) {
+            SharedData.pushContext(this);
         }
         super.onResume();
     }
@@ -260,6 +269,18 @@ public class MainActivity extends AppCompatActivity
                 startActivity(intentRoute);
                 drawer.closeDrawer(GravityCompat.START);
                 return true;
+            case R.id.nav_tutorial:
+                drawer.closeDrawer(GravityCompat.START);
+                SharedData.startTutorial();
+                if (mMapFragment != null) {
+                    ((MapsFragment)mMapFragment).showTuturial();
+                }
+                return true;
+            case R.id.nav_feedback:
+                Intent intent1 = new Intent(this, FeedbackActivity.class);
+                startActivity(intent1);
+                drawer.closeDrawer(GravityCompat.START);
+                return true;
             case R.id.nav_logout:
                 signOut();
                 return true;
@@ -274,6 +295,15 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void signOut() {
+        try {
+            toolbar.removeAllViews();
+            ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                    this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+            drawer.setDrawerListener(toggle);
+            toggle.syncState();
+        } catch (Exception e) {
+
+        }
         Intent intent = new Intent(this, LocationService.class);
         Intent intent2 = new Intent(this, RouteService.class);
         stopService(intent);

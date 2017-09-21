@@ -20,6 +20,9 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.view.animation.GridLayoutAnimationController;
 import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.TextView;
@@ -93,8 +96,9 @@ public class GroupsActivity extends AppCompatActivity {
     private void setmMenuAdd() {
         final FloatingActionButton scanFab = new FloatingActionButton(this);
         scanFab.setButtonSize(FloatingActionButton.SIZE_MINI);
-        scanFab.setLabelText("Scan QR Code");
+        scanFab.setLabelText("Scan QR Code to Create The Group");
         scanFab.setImageResource(R.drawable.ic_filter_center_focus_24dp);
+        scanFab.setColorNormalResId(R.color.buttonColor);
         mMenuAdd.addMenuButton(scanFab);
         scanFab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -117,6 +121,7 @@ public class GroupsActivity extends AppCompatActivity {
         readFab.setButtonSize(FloatingActionButton.SIZE_MINI);
         readFab.setLabelText("Read QR Code From Image");
         readFab.setImageResource(R.drawable.ic_image_24dp);
+        readFab.setColorNormalResId(R.color.buttonColor);
         mMenuAdd.addMenuButton(readFab);
         readFab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -217,7 +222,6 @@ public class GroupsActivity extends AppCompatActivity {
                             }
                         });
                     }
-                    mGroupGrid.setOnItemClickListener(mGridClickListener);
                 }
             }
 
@@ -231,6 +235,10 @@ public class GroupsActivity extends AppCompatActivity {
     private void showData() {
         GridAdapter adapter = new GridAdapter(GroupsActivity.this, true, mGroups);
         mGroupGrid.setAdapter(adapter);
+        Animation animation = AnimationUtils.loadAnimation(this,R.anim.grid_anim);
+        GridLayoutAnimationController controller = new GridLayoutAnimationController(animation, .2f, .2f);
+        mGroupGrid.setLayoutAnimation(controller);
+        mGroupGrid.setOnItemClickListener(mGridClickListener);
     }
 
     /**
@@ -343,7 +351,9 @@ public class GroupsActivity extends AppCompatActivity {
 
                     String msg = "refresh:" + gid + ":" + group.getName() + ":join";
                     refNotification.push().child(msg).setValue(true);
-                    mLoadingDialog.dismiss();
+                    if (mLoadingDialog != null) {
+                        mLoadingDialog.dismiss();
+                    }
                 } else {
                     Toast.makeText(GroupsActivity.this, task.getException().getMessage(), Toast.LENGTH_SHORT).show();
                 }

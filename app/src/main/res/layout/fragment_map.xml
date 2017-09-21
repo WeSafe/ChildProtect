@@ -25,6 +25,13 @@
         android:textColor="@android:color/white"
         android:visibility="gone" />
 
+    <ListView
+        android:id="@+id/list_group"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:background="#fff"></ListView>
+
     <!--<TextView-->
         <!--android:id="@+id/txt_speed"-->
         <!--android:layout_width="match_parent"-->
@@ -46,14 +53,14 @@
             android:paddingRight="80dp"
             android:paddingBottom="8dp"
             android:paddingLeft="10dp"
-            fab:menu_icon="@drawable/ic_history_24dp"
+            fab:menu_icon="@drawable/history"
             fab:menu_labels_ellipsize="end"
             fab:menu_labels_singleLine="true"
             fab:menu_colorNormal="@color/buttonColor"
             fab:menu_colorPressed="@color/buttonColorDark"
             app:fab_colorNormal="@color/buttonColor"
             app:fab_colorPressed="@color/buttonColorDark"
-            fab:menu_fab_label="History Route">
+            fab:menu_fab_label="Route History">
 
         </com.github.clans.fab.FloatingActionMenu>
 
@@ -81,7 +88,7 @@
         android:layout_marginRight="8dp"
         app:fab_colorNormal="@color/buttonColor"
         app:fab_colorPressed="@color/buttonColorDark"
-        android:src="@drawable/ic_my_location_24dp" />
+        android:src="@drawable/location" />
 
     <com.github.clans.fab.FloatingActionButton
         android:id="@+id/fab_upload"
@@ -92,7 +99,7 @@
         android:layout_marginLeft="8dp"
         app:fab_colorNormal="@color/buttonColor"
         app:fab_colorPressed="@color/buttonColorDark"
-        android:src="@drawable/ic_cloud_upload_24dp" />
+        android:src="@drawable/sharelocation" />
 
     <com.github.clans.fab.FloatingActionButton
         android:id="@+id/fab_stop"
